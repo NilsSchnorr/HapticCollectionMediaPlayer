@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
 """
 NFC Display System Configuration
+Optimized for fresh Raspberry Pi setup
 """
 
-# Reader Configuration
-READER_TYPE = "PN532"  # Options: "PN532" or "RC522"
+# Reader Configuration - Using working approach
+READER_TYPE = "PN532_WORKING"  # Uses working NFC-Player approach
 
-# PN532 NFC HAT Configuration
-# The PN532 NFC HAT can use different interfaces:
-# - 'i2c': Most common for HATs (uses I2C bus)
-# - 'spi': Alternative interface
-# - 'uart': Serial interface
-# - 'usb': For USB-based readers
-PN532_INTERFACE = 'uart'  # For PN532 NFC HAT, use 'uart'
-
-# I2C Configuration for PN532 HAT
-PN532_I2C_BUS = 1  # Raspberry Pi typically uses bus 1
-PN532_I2C_ADDRESS = 0x24  # Default I2C address for PN532
+# PN532 Configuration - Based on working player
+PN532_UART_PORT = '/dev/ttyS0'      # Working player uses ttyS0, not ttyAMA0
+PN532_UART_BAUDRATE = 115200        # Standard baud rate
+PN532_RESET_PIN = 20               # GPIO pin for reset (RSTPDN -> D20)
 
 # Display Configuration
-HOME_BASE_PAGE = "home_base.html"  # Page shown when no tag is present
+HOME_BASE_PAGE = "home_base.html"    # Page shown when no tag is present
 UNKNOWN_TAG_PAGE = "unknown_tag.html"  # Page shown for unregistered tags
 
 # Tag Detection Settings
-NO_TAG_THRESHOLD = 3  # Number of failed reads before considering tag removed
-READ_INTERVAL = 0.1  # Seconds between tag reads
+NO_TAG_THRESHOLD = 3    # Number of failed reads before considering tag removed
+READ_INTERVAL = 0.1     # Seconds between tag reads
 
 # Browser Configuration
 BROWSER_COMMAND = [
@@ -35,14 +29,14 @@ BROWSER_COMMAND = [
     '--disable-session-crashed-bubble',
     '--disable-translate',
     '--disable-features=TranslateUI',
-    '--check-for-update-interval=31536000',  # Disable update checks
+    '--check-for-update-interval=31536000',
     '--disable-component-update',
 ]
 
 # For development/testing without fullscreen
 BROWSER_COMMAND_DEV = [
     'chromium-browser',
-    '--app={url}',  # {url} will be replaced with actual URL
+    '--app={url}',
     '--window-size=800,600',
     '--window-position=100,100',
     '--disable-infobars',
@@ -60,25 +54,15 @@ LOG_FILE = "logs/nfc_display.log"
 LOG_LEVEL = "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
 
 # Auto-add unknown tags
-AUTO_ADD_UNKNOWN_TAGS = False  # If True, unknown tags will be automatically added to the database
+AUTO_ADD_UNKNOWN_TAGS = False
 
 # Display timeout (optional)
-# Set to None to disable, or number of seconds to return to home after no interaction
 DISPLAY_TIMEOUT = None  # e.g., 300 for 5 minutes
-
-# GPIO Pin Configuration (for RC522)
-RC522_RST_PIN = 22  # GPIO pin for RST
-RC522_SPI_ID = 0    # SPI bus ID
-RC522_SPI_CE = 0    # SPI chip enable
-
-# PN532 Configuration - UART specific settings
-PN532_UART_PORT = '/dev/serial0'  # UART port for PN532
-PN532_UART_BAUDRATE = 115200      # UART baud rate
 
 # Performance Settings
 CACHE_HTML = True  # Cache HTML files in memory for faster loading
 
-# Network Features (future expansion)
-ENABLE_WEB_SERVER = False  # Enable web interface for remote management
-WEB_SERVER_PORT = 8080
+# Network Features
+ENABLE_WEB_SERVER = True   # Enable web interface for tag management
+WEB_SERVER_PORT = 5000
 WEB_SERVER_HOST = "0.0.0.0"

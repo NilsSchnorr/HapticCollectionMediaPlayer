@@ -1,103 +1,151 @@
 #!/usr/bin/env python3
+"""
+NFC Tag Database Management
+Handles SQLite database for NFC tag to HTML file mapping
+"""
+
 import sqlite3
-from datetime import datetime
+import logging
 import os
+from typing import Optional, Tuple, List
+
+logger = logging.getLogger(__name__)
 
 class NFCDatabase:
-    def __init__(self, db_path='data/nfc_tags.db'):
+    def __init__(self, db_path: str):
+        """Initialize database connection and create tables if needed"""
         self.db_path = db_path
         
-    def get_html_file(self, tag_uid):
-        """Get HTML file associated with a tag UID"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         
+        # Initialize database
+        self._init_database()
+    
+    def _init_database(self):
+        """Create tables if they don't exist"""
         try:
-            # Get HTML file for tag
-            cursor.execute('''
-            SELECT html_file, tag_name FROM nfc_tags WHERE tag_uid = ?
-            ''', (tag_uid,))
-            
-            result = cursor.fetchone()
-            
-            if result:
-                html_file, tag_name = result
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
                 
-                # Update last accessed time
+                # Create tags table
                 cursor.execute('''
-                UPDATE nfc_tags SET last_accessed = ? WHERE tag_uid = ?
-                ''', (datetime.now(), tag_uid))
+                    CREATE TABLE IF NOT EXISTS nfc_tags (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        tag_uid TEXT UNIQUE NOT NULL,
+                        tag_name TEXT NOT NULL,
+                        html_file TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
                 
-                # Log access
+                # Create usage log table
                 cursor.execute('''
-                INSERT INTO access_log (tag_uid) VALUES (?)
-                ''', (tag_uid,))
+                    CREATE TABLE IF NOT EXISTS usage_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        tag_uid TEXT NOT NULL,
+                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (tag_uid) REFERENCES nfc_tags (tag_uid)
+                    )
+                ''')
                 
                 conn.commit()
-                return html_file, tag_name
-            else:
-                return None, None
+                logger.info("Database initialized successfully")
                 
-        finally:
-            conn.close()
+        except Exception as e:
+            logger.error(f"Error initializing database: {e}")
+            raise
     
-    def add_tag(self, tag_uid, tag_name, html_file, description=""):
-        """Add a new tag to the database"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
+    def add_tag(self, tag_uid: str, tag_name: str, html_file: str) -> bool:
+        """Add a new NFC tag to the database"""
         try:
-            cursor.execute('''
-            INSERT INTO nfc_tags (tag_uid, tag_name, html_file, description)
-            VALUES (?, ?, ?, ?)
-            ''', (tag_uid, tag_name, html_file, description))
-            
-            conn.commit()
-            return True
-        except sqlite3.IntegrityError:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT OR REPLACE INTO nfc_tags (tag_uid, tag_name, html_file)
+                    VALUES (?, ?, ?)
+                ''', (tag_uid, tag_name, html_file))
+                conn.commit()
+                logger.info(f"Added tag: {tag_name} ({tag_uid}) -> {html_file}")
+                return True
+        except Exception as e:
+            logger.error(f"Error adding tag: {e}")
             return False
-        finally:
-            conn.close()
     
-    def list_tags(self):
-        """List all registered tags"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-        SELECT tag_uid, tag_name, html_file, last_accessed FROM nfc_tags
-        ORDER BY created_at DESC
-        ''')
-        
-        tags = cursor.fetchall()
-        conn.close()
-        
-        return tags
+    def get_html_file(self, tag_uid: str) -> Tuple[Optional[str], Optional[str]]:
+        """Get HTML file and tag name for a given UID"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT html_file, tag_name FROM nfc_tags WHERE tag_uid = ?
+                ''', (tag_uid,))
+                result = cursor.fetchone()
+                
+                if result:
+                    # Update last used timestamp
+                    cursor.execute('''
+                        UPDATE nfc_tags SET last_used = CURRENT_TIMESTAMP WHERE tag_uid = ?
+                    ''', (tag_uid,))
+                    
+                    # Log usage
+                    cursor.execute('''
+                        INSERT INTO usage_log (tag_uid) VALUES (?)
+                    ''', (tag_uid,))
+                    
+                    conn.commit()
+                    return result[0], result[1]  # html_file, tag_name
+                else:
+                    logger.info(f"Unknown tag: {tag_uid}")
+                    return None, None
+                    
+        except Exception as e:
+            logger.error(f"Error getting HTML file for tag {tag_uid}: {e}")
+            return None, None
     
-    def get_access_log(self, tag_uid=None, limit=100):
-        """Get access log, optionally filtered by tag UID"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        if tag_uid:
-            cursor.execute('''
-            SELECT a.tag_uid, t.tag_name, a.accessed_at 
-            FROM access_log a
-            JOIN nfc_tags t ON a.tag_uid = t.tag_uid
-            WHERE a.tag_uid = ?
-            ORDER BY a.accessed_at DESC
-            LIMIT ?
-            ''', (tag_uid, limit))
-        else:
-            cursor.execute('''
-            SELECT a.tag_uid, t.tag_name, a.accessed_at 
-            FROM access_log a
-            JOIN nfc_tags t ON a.tag_uid = t.tag_uid
-            ORDER BY a.accessed_at DESC
-            LIMIT ?
-            ''', (limit,))
-        
-        logs = cursor.fetchall()
-        conn.close()
-        
-        return logs
+    def get_all_tags(self) -> List[Tuple]:
+        """Get all tags from database"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT tag_uid, tag_name, html_file, created_at, last_used 
+                    FROM nfc_tags ORDER BY tag_name
+                ''')
+                return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error getting all tags: {e}")
+            return []
+    
+    def delete_tag(self, tag_uid: str) -> bool:
+        """Delete a tag from the database"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM nfc_tags WHERE tag_uid = ?', (tag_uid,))
+                cursor.execute('DELETE FROM usage_log WHERE tag_uid = ?', (tag_uid,))
+                conn.commit()
+                logger.info(f"Deleted tag: {tag_uid}")
+                return True
+        except Exception as e:
+            logger.error(f"Error deleting tag: {e}")
+            return False
+    
+    def get_usage_stats(self) -> List[Tuple]:
+        """Get usage statistics"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT t.tag_name, t.tag_uid, COUNT(u.id) as usage_count,
+                           MAX(u.timestamp) as last_used
+                    FROM nfc_tags t
+                    LEFT JOIN usage_log u ON t.tag_uid = u.tag_uid
+                    GROUP BY t.tag_uid
+                    ORDER BY usage_count DESC
+                ''')
+                return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error getting usage stats: {e}")
+            return []

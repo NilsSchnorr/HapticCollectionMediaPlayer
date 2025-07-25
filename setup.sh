@@ -29,10 +29,8 @@ sudo apt-get install -y \
     git
 
 # Create project directory
-PROJECT_DIR="$HOME/nfc-display"
-echo "Creating project directory at $PROJECT_DIR..."
-mkdir -p "$PROJECT_DIR"
-cd "$PROJECT_DIR"
+PROJECT_DIR=$(pwd)
+echo "Using current directory: $PROJECT_DIR"
 
 # Create directory structure
 mkdir -p html static data logs

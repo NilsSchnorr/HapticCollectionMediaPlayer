@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Tag Management Interface</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: -1px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            margin-bottom: 1.5rem;
+            color: #444;
+            font-weight: 500;
+        }
+        
+        /* Tag Scanner Section */
+        .scanner-status {
+            text-align: center;
+            padding: 3rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .scanner-status.active {
+            background: #d4f4dd;
+            border: 2px solid #4ade80;
+        }
+        
+        .scanner-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .scanner-message {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .tag-uid {
+            font-family: monospace;
+            font-size: 1.4rem;
+            color: #667eea;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 0.5rem;
+        }
+        
+        .button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .button.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .button.secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .button.danger:hover {
+            background: #c0392b;
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Tags Table */
+        .tags-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .tags-table th,
+        .tags-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tags-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .tags-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .tag-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .tag-actions button {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Status Messages */
+        .status-message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4f4dd;
+            color: #166534;
+            border: 1px solid #4ade80;
+        }
+        
+        .status-message.error {
+            background: #fee;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Tag Form */
+        .tag-form {
+            display: none;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+        
+        .tag-form.active {
+            display: block;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🏷️ NFC Tag Management Interface</h1>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Status Message -->
+        <div id="statusMessage" class="status-message"></div>
+        
+        <!-- Scanner Section -->
+        <div class="card">
+            <h2>Tag Scanner</h2>
+            <div id="scannerStatus" class="scanner-status">
+                <div class="scanner-icon">📡</div>
+                <div class="scanner-message">Waiting for NFC tag...</div>
+                <div id="tagUid" class="tag-uid" style="display: none;"></div>
+            </div>
+            
+            <div id="tagForm" class="tag-form">
+                <form id="tagEditForm">
+                    <input type="hidden" id="editTagUid">
+                    
+                    <div class="form-group">
+                        <label for="tagName">Tag Name</label>
+                        <input type="text" id="tagName" placeholder="Enter a friendly name for this tag" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="htmlFile">HTML File</label>
+                        <select id="htmlFile" required>
+                            <option value="">Select an HTML file...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description (Optional)</label>
+                        <input type="text" id="description" placeholder="Brief description of this tag">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="button">Save Tag</button>
+                        <button type="button" class="button secondary" onclick="cancelEdit()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <!-- Quick Actions -->
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <p style="margin-bottom: 1rem;">Place an NFC tag on the reader to automatically detect and configure it.</p>
+                <button class="button" onclick="refreshTags()">🔄 Refresh Tag List</button>
+                <button class="button secondary" onclick="refreshHtmlFiles()">📄 Refresh HTML Files</button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="card">
+                <h2>Statistics</h2>
+                <div id="stats">
+                    <p>Total Tags: <strong id="totalTags">0</strong></p>
+                    <p>Last Updated: <strong id="lastUpdated">Never</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Registered Tags -->
+        <div class="card">
+            <h2>Registered Tags</h2>
+            <div id="tagsTableContainer">
+                <p>Loading tags...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for viewing logs -->
+    <div id="logsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeLogsModal()">&times;</span>
+            <h2>Access Logs</h2>
+            <div id="logsContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        const socket = io();
+        let currentDetectedTag = null;
+        let allTags = [];
+        let htmlFiles = [];
+        
+        // Socket.IO event handlers
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            showStatus('Connected to NFC reader', 'success');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            showStatus('Disconnected from NFC reader', 'error');
+        });
+        
+        socket.on('tag_detected', function(tagInfo) {
+            console.log('Tag detected:', tagInfo);
+            currentDetectedTag = tagInfo;
+            updateScannerStatus(tagInfo);
+        });
+        
+        socket.on('tag_removed', function() {
+            console.log('Tag removed');
+            currentDetectedTag = null;
+            resetScannerStatus();
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshTags();
+            refreshHtmlFiles();
+            
+            // Form submission
+            document.getElementById('tagEditForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveTag();
+            });
+        });
+        
+        function updateScannerStatus(tagInfo) {
+            const scanner = document.getElementById('scannerStatus');
+            const message = scanner.querySelector('.scanner-message');
+            const uidDiv = document.getElementById('tagUid');
+            const form = document.getElementById('tagForm');
+            
+            scanner.classList.add('active');
+            
+            if (tagInfo.name === 'Unregistered Tag') {
+                message.textContent = 'New tag detected! Configure it below:';
+                scanner.querySelector('.scanner-icon').textContent = '🆕';
+            } else {
+                message.textContent = 'Registered tag detected:';
+                scanner.querySelector('.scanner-icon').textContent = '✅';
+            }
+            
+            uidDiv.textContent = tagInfo.uid;
+            uidDiv.style.display = 'block';
+            
+            // Populate form
+            document.getElementById('editTagUid').value = tagInfo.uid;
+            document.getElementById('tagName').value = tagInfo.name || '';
+            document.getElementById('htmlFile').value = tagInfo.html_file || '';
+            document.getElementById('description').value = '';
+            
+            form.classList.add('active');
+        }
+        
+        function resetScannerStatus() {
+            const scanner = document.getElementById('scannerStatus');
+            const message = scanner.querySelector('.scanner-message');
+            const uidDiv = document.getElementById('tagUid');
+            const form = document.getElementById('tagForm');
+            
+            scanner.classList.remove('active');
+            scanner.querySelector('.scanner-icon').textContent = '📡';
+            message.textContent = 'Waiting for NFC tag...';
+            uidDiv.style.display = 'none';
+            form.classList.remove('active');
+        }
+        
+        function refreshTags() {
+            fetch('/api/tags')
+                .then(response => response.json())
+                .then(tags => {
+                    allTags = tags;
+                    displayTags(tags);
+                    updateStats();
+                })
+                .catch(error => {
+                    console.error('Error loading tags:', error);
+                    showStatus('Failed to load tags', 'error');
+                });
+        }
+        
+        function refreshHtmlFiles() {
+            fetch('/api/html_files')
+                .then(response => response.json())
+                .then(files => {
+                    htmlFiles = files;
+                    updateHtmlFileDropdown();
+                })
+                .catch(error => {
+                    console.error('Error loading HTML files:', error);
+                    showStatus('Failed to load HTML files', 'error');
+                });
+        }
+        
+        function updateHtmlFileDropdown() {
+            const select = document.getElementById('htmlFile');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">Select an HTML file...</option>';
+            
+            htmlFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                select.appendChild(option);
+            });
+            
+            select.value = currentValue;
+        }
+        
+        function displayTags(tags) {
+            const container = document.getElementById('tagsTableContainer');
+            
+            if (tags.length === 0) {
+                container.innerHTML = '<p>No tags registered yet. Place a tag on the reader to get started!</p>';
+                return;
+            }
+            
+            let html = `
+                <table class="tags-table">
+                    <thead>
+                        <tr>
+                            <th>UID</th>
+                            <th>Name</th>
+                            <th>HTML File</th>
+                            <th>Last Accessed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            tags.forEach(tag => {
+                const lastAccessed = tag.last_accessed ? new Date(tag.last_accessed).toLocaleString() : 'Never';
+                html += `
+                    <tr>
+                        <td style="font-family: monospace; font-size: 0.9em;">${tag.uid}</td>
+                        <td>${tag.name}</td>
+                        <td>${tag.html_file || '<em>Not set</em>'}</td>
+                        <td>${lastAccessed}</td>
+                        <td class="tag-actions">
+                            <button class="button" onclick="editTag('${tag.uid}')">Edit</button>
+                            <button class="button secondary" onclick="viewLogs('${tag.uid}')">Logs</button>
+                            <button class="button danger" onclick="deleteTag('${tag.uid}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function updateStats() {
+            document.getElementById('totalTags').textContent = allTags.length;
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function saveTag() {
+            const uid = document.getElementById('editTagUid').value;
+            const name = document.getElementById('tagName').value;
+            const htmlFile = document.getElementById('htmlFile').value;
+            const description = document.getElementById('description').value;
+            
+            const data = {
+                name: name,
+                html_file: htmlFile,
+                description: description
+            };
+            
+            fetch(`/api/tag/${uid}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    showStatus(result.error, 'error');
+                } else {
+                    showStatus('Tag saved successfully!', 'success');
+                    refreshTags();
+                    if (!currentDetectedTag) {
+                        resetScannerStatus();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error saving tag:', error);
+                showStatus('Failed to save tag', 'error');
+            });
+        }
+        
+        function editTag(uid) {
+            // Find tag in list
+            const tag = allTags.find(t => t.uid === uid);
+            if (!tag) return;
+            
+            // Populate form
+            document.getElementById('editTagUid').value = tag.uid;
+            document.getElementById('tagName').value = tag.name;
+            document.getElementById('htmlFile').value = tag.html_file;
+            document.getElementById('description').value = '';
+            
+            // Show form
+            document.getElementById('tagForm').classList.add('active');
+            
+            // Update scanner status
+            const scanner = document.getElementById('scannerStatus');
+            const message = scanner.querySelector('.scanner-message');
+            const uidDiv = document.getElementById('tagUid');
+            
+            scanner.classList.add('active');
+            scanner.querySelector('.scanner-icon').textContent = '✏️';
+            message.textContent = 'Editing tag:';
+            uidDiv.textContent = tag.uid;
+            uidDiv.style.display = 'block';
+            
+            // Scroll to form
+            scanner.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function deleteTag(uid) {
+            if (!confirm('Are you sure you want to delete this tag?')) return;
+            
+            fetch(`/api/tag/${uid}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    showStatus(result.error, 'error');
+                } else {
+                    showStatus('Tag deleted successfully', 'success');
+                    refreshTags();
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting tag:', error);
+                showStatus('Failed to delete tag', 'error');
+            });
+        }
+        
+        function viewLogs(uid) {
+            fetch(`/api/logs/${uid}`)
+                .then(response => response.json())
+                .then(logs => {
+                    displayLogs(logs);
+                    document.getElementById('logsModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading logs:', error);
+                    showStatus('Failed to load logs', 'error');
+                });
+        }
+        
+        function displayLogs(logs) {
+            const container = document.getElementById('logsContent');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<p>No access logs for this tag.</p>';
+                return;
+            }
+            
+            let html = '<table class="tags-table"><thead><tr><th>Time</th><th>Tag Name</th></tr></thead><tbody>';
+            
+            logs.forEach(log => {
+                const time = new Date(log.accessed_at).toLocaleString();
+                html += `<tr><td>${time}</td><td>${log.name}</td></tr>`;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function closeLogsModal() {
+            document.getElementById('logsModal').style.display = 'none';
+        }
+        
+        function cancelEdit() {
+            if (!currentDetectedTag) {
+                resetScannerStatus();
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('logsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

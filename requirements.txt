@@ -1,0 +1,18 @@
+# NFC Display System Requirements
+
+# For PN532 NFC Reader (USB)
+nfcpy==1.0.4
+
+# For RC522 NFC Reader (SPI)
+# Uncomment these if using RC522:
+# mfrc522==0.0.7
+# RPi.GPIO==0.7.1
+
+# Web Interface Dependencies
+Flask==2.3.2
+Flask-SocketIO==5.3.4
+python-socketio==5.9.0
+
+# Note: Only install the dependencies for your specific reader type
+# PN532 users: pip install nfcpy
+# RC522 users: pip install mfrc522 RPi.GPIO

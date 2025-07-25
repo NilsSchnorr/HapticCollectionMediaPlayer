@@ -4,7 +4,7 @@ Test script to verify NFC tag presence detection
 """
 import time
 import sys
-from config import READER_TYPE, NO_TAG_THRESHOLD, READ_INTERVAL, PN532_INTERFACE, PN532_I2C_BUS, PN532_I2C_ADDRESS
+from config import READER_TYPE, NO_TAG_THRESHOLD, READ_INTERVAL, PN532_INTERFACE, PN532_I2C_BUS, PN532_I2C_ADDRESS, PN532_UART_PORT, PN532_UART_BAUDRATE
 
 if READER_TYPE == "PN532":
     import nfc
@@ -32,7 +32,9 @@ class PresenceTester:
             elif PN532_INTERFACE == 'spi':
                 connection_string = 'spi:0:0'
             elif PN532_INTERFACE == 'uart':
-                connection_string = 'tty:serial0:115200'
+                # Extract device name from full path
+                uart_device = PN532_UART_PORT.split('/')[-1] if '/' in PN532_UART_PORT else PN532_UART_PORT
+                connection_string = f'tty:{uart_device}:{PN532_UART_BAUDRATE}'
             else:  # usb
                 connection_string = 'usb'
             

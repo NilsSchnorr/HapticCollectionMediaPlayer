@@ -12,7 +12,7 @@ READER_TYPE = "PN532"  # Options: "PN532" or "RC522"
 # - 'spi': Alternative interface
 # - 'uart': Serial interface
 # - 'usb': For USB-based readers
-PN532_INTERFACE = 'i2c'  # For PN532 NFC HAT, use 'i2c'
+PN532_INTERFACE = 'uart'  # For PN532 NFC HAT, use 'uart'
 
 # I2C Configuration for PN532 HAT
 PN532_I2C_BUS = 1  # Raspberry Pi typically uses bus 1
@@ -71,8 +71,9 @@ RC522_RST_PIN = 22  # GPIO pin for RST
 RC522_SPI_ID = 0    # SPI bus ID
 RC522_SPI_CE = 0    # SPI chip enable
 
-# PN532 Configuration
-PN532_INTERFACE = 'usb'  # Options: 'usb', 'uart', 'i2c'
+# PN532 Configuration - UART specific settings
+PN532_UART_PORT = '/dev/serial0'  # UART port for PN532
+PN532_UART_BAUDRATE = 115200      # UART baud rate
 
 # Performance Settings
 CACHE_HTML = True  # Cache HTML files in memory for faster loading

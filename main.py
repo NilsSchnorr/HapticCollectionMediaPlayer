@@ -65,7 +65,9 @@ class NFCDisplay:
             elif PN532_INTERFACE == 'spi':
                 connection_string = 'spi:0:0'  # SPI bus 0, chip select 0
             elif PN532_INTERFACE == 'uart':
-                connection_string = 'tty:serial0:115200'  # UART on GPIO pins
+                # Extract device name from full path (e.g., '/dev/serial0' -> 'serial0')
+                uart_device = PN532_UART_PORT.split('/')[-1] if '/' in PN532_UART_PORT else PN532_UART_PORT
+                connection_string = f'tty:{uart_device}:{PN532_UART_BAUDRATE}'  # UART on GPIO pins
             else:  # usb
                 connection_string = 'usb'
             

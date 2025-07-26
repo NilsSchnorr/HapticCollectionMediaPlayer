@@ -1,0 +1,85 @@
+# NFC to HTML Mapping System
+
+This system allows you to associate NFC chips with HTML files and automatically display the content when an NFC chip is detected.
+
+## Components
+
+1. **Web Interface** (`nfc_web_server.py`) - A Flask-based web application for managing NFC mappings
+2. **NFC Player** (`nfc_player.py`) - Continuously monitors for NFC chips and opens associated HTML files
+3. **HTML Content** (`html_content/`) - Directory containing your HTML files
+
+## Installation
+
+1. Install Python dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Ensure your PN532 NFC reader is connected to your Raspberry Pi via UART
+
+## Usage
+
+### Step 1: Start the Web Server
+
+Run the web interface to manage NFC mappings:
+
+```bash
+python3 nfc_web_server.py
+```
+
+The web interface will be available at `http://localhost:5000` (or `http://[raspberry-pi-ip]:5000` from another device).
+
+### Step 2: Add HTML Content
+
+Place your HTML files in the `html_content/` directory. These files will be available for mapping to NFC chips.
+
+### Step 3: Create Mappings
+
+Using the web interface:
+1. Place an NFC chip on the reader - the UID will be automatically detected
+2. Select an HTML file from the dropdown
+3. Optionally add a description
+4. Click "Save Mapping"
+
+### Step 4: Run the Player
+
+In a separate terminal, run the NFC player:
+
+```bash
+python3 nfc_player.py
+```
+
+Now when you place a mapped NFC chip on the reader, the associated HTML file will open automatically.
+
+## File Structure
+
+```
+HapticCollectionMediaPlayer/
+├── nfc_web_server.py      # Web interface server
+├── nfc_player.py          # NFC detection and HTML launcher
+├── nfc_mappings.json      # Stores NFC to HTML mappings
+├── requirements.txt       # Python dependencies
+├── web_interface/         # Web interface files
+│   └── index.html        # Main web interface
+├── html_content/          # Your HTML files go here
+│   └── sample.html       # Example HTML file
+└── python/               # Existing PN532 library files
+```
+
+## Features
+
+- **Auto-detection**: NFC chips are automatically detected when placed on the reader
+- **Web-based Management**: Easy-to-use interface for creating and managing mappings
+- **Real-time Updates**: The player automatically loads new mappings
+- **Multiple File Support**: Map different NFC chips to different HTML files
+- **Kiosk Mode**: On Raspberry Pi, HTML files open in fullscreen kiosk mode
+
+## Troubleshooting
+
+- **NFC Reader Not Found**: Ensure the PN532 is properly connected and powered
+- **Permission Errors**: Run with `sudo` if you encounter GPIO permission issues
+- **Port Already in Use**: Change the port in `nfc_web_server.py` if 5000 is occupied
+
+## Development Mode
+
+The web interface includes a "Test with Random UID" button for testing without an actual NFC reader.

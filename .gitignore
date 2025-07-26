@@ -40,3 +40,6 @@ nfc_display.log
 
 # Local configuration overrides
 config_local.py
+
+# NFC System specific
+nfc_mappings.json

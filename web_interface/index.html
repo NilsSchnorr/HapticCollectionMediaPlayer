@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC to HTML Mapper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2.5rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .nfc-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.active {
+            background-color: #27ae60;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .current-uid {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            background-color: #f8f9fa;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            background-color: white;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        .mappings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .mappings-table th,
+        .mappings-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .mappings-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .mappings-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .uid-cell {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        
+        #detectedChip {
+            transition: all 0.3s ease;
+        }
+        
+        #detectedChip.highlight {
+            background-color: #f1c40f;
+            transform: scale(1.05);
+        }
+        
+        .test-mode {
+            background-color: #f39c12;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            display: inline-block;
+            margin-left: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🏷️ NFC to HTML Mapper</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Alerts -->
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+        <div id="alertInfo" class="alert alert-info"></div>
+
+        <!-- NFC Status -->
+        <div class="card">
+            <h2>NFC Reader Status</h2>
+            <div class="nfc-status">
+                <div id="statusIndicator" class="status-indicator"></div>
+                <span id="statusText">Waiting for NFC chip...</span>
+            </div>
+            <div id="detectedChip" style="display: none;">
+                <strong>Detected NFC Chip UID:</strong>
+                <span class="current-uid" id="currentUID">-</span>
+            </div>
+        </div>
+
+        <!-- Mapping Form -->
+        <div class="card">
+            <h2>Create New Mapping</h2>
+            <form id="mappingForm">
+                <div class="form-group">
+                    <label for="nfcUID">NFC Chip UID</label>
+                    <input type="text" id="nfcUID" name="nfcUID" placeholder="Scan an NFC chip or enter UID manually" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="htmlFile">HTML File</label>
+                    <select id="htmlFile" name="htmlFile" required>
+                        <option value="">Select an HTML file...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" name="description" rows="2" placeholder="Add a description for this mapping..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Save Mapping</button>
+                <button type="button" class="btn btn-secondary" onclick="testNFC()">Test with Random UID</button>
+            </form>
+        </div>
+
+        <!-- Existing Mappings -->
+        <div class="card">
+            <h2>Existing Mappings</h2>
+            <div id="mappingsList">
+                <div class="empty-state">
+                    <p>No mappings found. Create your first mapping above!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDetectedUID = null;
+        let pollInterval = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHTMLFiles();
+            loadMappings();
+            startNFCPolling();
+            
+            // Setup form submission
+            document.getElementById('mappingForm').addEventListener('submit', handleFormSubmit);
+        });
+
+        // Start polling for NFC chips
+        function startNFCPolling() {
+            pollInterval = setInterval(checkCurrentNFC, 1000);
+        }
+
+        // Check for currently detected NFC chip
+        async function checkCurrentNFC() {
+            try {
+                const response = await fetch('/api/current_nfc');
+                const data = await response.json();
+                
+                if (data.uid) {
+                    // NFC chip detected
+                    document.getElementById('statusIndicator').classList.add('active');
+                    document.getElementById('statusText').textContent = 'NFC chip detected!';
+                    document.getElementById('detectedChip').style.display = 'block';
+                    document.getElementById('currentUID').textContent = data.uid;
+                    
+                    // Update form if different UID
+                    if (data.uid !== currentDetectedUID) {
+                        currentDetectedUID = data.uid;
+                        document.getElementById('nfcUID').value = data.uid;
+                        
+                        // Highlight the detected chip
+                        const detectedChipDiv = document.getElementById('detectedChip');
+                        detectedChipDiv.classList.add('highlight');
+                        setTimeout(() => {
+                            detectedChipDiv.classList.remove('highlight');
+                        }, 1000);
+                    }
+                } else {
+                    // No NFC chip detected
+                    document.getElementById('statusIndicator').classList.remove('active');
+                    document.getElementById('statusText').textContent = 'Waiting for NFC chip...';
+                    document.getElementById('detectedChip').style.display = 'none';
+                    currentDetectedUID = null;
+                }
+            } catch (error) {
+                console.error('Error checking NFC status:', error);
+            }
+        }
+
+        // Load available HTML files
+        async function loadHTMLFiles() {
+            try {
+                const response = await fetch('/api/html_files');
+                const files = await response.json();
+                
+                const select = document.getElementById('htmlFile');
+                select.innerHTML = '<option value="">Select an HTML file...</option>';
+                
+                files.forEach(file => {
+                    const option = document.createElement('option');
+                    option.value = file;
+                    option.textContent = file;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading HTML files:', error);
+                showAlert('error', 'Failed to load HTML files');
+            }
+        }
+
+        // Load existing mappings
+        async function loadMappings() {
+            try {
+                const response = await fetch('/api/mappings');
+                const mappings = await response.json();
+                
+                const mappingsList = document.getElementById('mappingsList');
+                
+                if (Object.keys(mappings).length === 0) {
+                    mappingsList.innerHTML = `
+                        <div class="empty-state">
+                            <p>No mappings found. Create your first mapping above!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table class="mappings-table">
+                        <thead>
+                            <tr>
+                                <th>NFC UID</th>
+                                <th>HTML File</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                for (const [uid, mapping] of Object.entries(mappings)) {
+                    const created = new Date(mapping.created).toLocaleString();
+                    html += `
+                        <tr>
+                            <td class="uid-cell">${uid}</td>
+                            <td>${mapping.html_file}</td>
+                            <td>${mapping.description || '-'}</td>
+                            <td>${created}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-danger" onclick="deleteMapping('${uid}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                html += '</tbody></table>';
+                mappingsList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading mappings:', error);
+                showAlert('error', 'Failed to load mappings');
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const formData = {
+                uid: document.getElementById('nfcUID').value,
+                html_file: document.getElementById('htmlFile').value,
+                description: document.getElementById('description').value
+            };
+            
+            try {
+                const response = await fetch('/api/mapping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', 'Mapping saved successfully!');
+                    document.getElementById('mappingForm').reset();
+                    loadMappings();
+                } else {
+                    showAlert('error', data.error || 'Failed to save mapping');
+                }
+            } catch (error) {
+                console.error('Error saving mapping:', error);
+                showAlert('error', 'Failed to save mapping');
+            }
+        }
+
+        // Delete a mapping
+        async function deleteMapping(uid) {
+            if (!confirm(`Are you sure you want to delete the mapping for UID ${uid}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/mapping/${uid}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', 'Mapping deleted successfully!');
+                    loadMappings();
+                } else {
+                    showAlert('error', data.error || 'Failed to delete mapping');
+                }
+            } catch (error) {
+                console.error('Error deleting mapping:', error);
+                showAlert('error', 'Failed to delete mapping');
+            }
+        }
+
+        // Test with random NFC UID (for development)
+        function testNFC() {
+            const randomUID = Array.from({length: 4}, () => 
+                Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+            ).join('');
+            
+            fetch(`/api/test_nfc/${randomUID}`)
+                .then(() => {
+                    showAlert('info', `Simulated NFC chip with UID: ${randomUID}`);
+                })
+                .catch(error => {
+                    console.error('Error simulating NFC:', error);
+                });
+        }
+
+        // Show alert messages
+        function showAlert(type, message) {
+            const alertId = type === 'success' ? 'alertSuccess' : 
+                           type === 'error' ? 'alertError' : 'alertInfo';
+            const alertDiv = document.getElementById(alertId);
+            
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

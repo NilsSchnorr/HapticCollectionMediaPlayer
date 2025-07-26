@@ -1,5 +1,6 @@
 Flask==2.3.2
-RPi.GPIO==0.7.1
-spidev==3.5
 pyserial==3.5
-adafruit-circuitpython-pn532==2.3.11
+# The following are only needed on Raspberry Pi:
+# RPi.GPIO==0.7.1
+# spidev==3.5
+# adafruit-circuitpython-pn532==2.3.11

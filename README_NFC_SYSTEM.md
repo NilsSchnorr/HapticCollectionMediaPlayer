@@ -10,19 +10,65 @@ This system allows you to associate NFC chips with HTML files and automatically 
 
 ## Installation
 
-1. Install Python dependencies:
+### Method 1: Using Virtual Environment (Recommended)
+
+1. Run the setup script:
 ```bash
-pip install -r requirements.txt
+chmod +x setup.sh
+./setup.sh
 ```
 
-2. Ensure your PN532 NFC reader is connected to your Raspberry Pi via UART
+2. The setup script will create a virtual environment and install all dependencies.
+
+### Method 2: Using System Packages (Raspberry Pi)
+
+1. Run the system package setup:
+```bash
+chmod +x setup_system_packages.sh
+./setup_system_packages.sh
+```
+
+### Method 3: Manual Virtual Environment
+
+1. Create and activate a virtual environment:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements-rpi.txt  # On Raspberry Pi
+# OR
+pip install -r requirements.txt      # On development machine
+```
+
+### Hardware Setup
+
+Ensure your PN532 NFC reader is connected to your Raspberry Pi via UART
 
 ## Usage
 
-### Step 1: Start the Web Server
+### Quick Start (After Installation)
 
-Run the web interface to manage NFC mappings:
+```bash
+chmod +x run_nfc_system.sh
+./run_nfc_system.sh
+```
 
+This will start both the web server and prompt you to start the NFC player.
+
+### Manual Start
+
+#### Step 1: Start the Web Server
+
+If using virtual environment:
+```bash
+source venv/bin/activate
+python3 nfc_web_server.py
+```
+
+Or without virtual environment:
 ```bash
 python3 nfc_web_server.py
 ```

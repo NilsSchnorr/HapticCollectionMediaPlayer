@@ -1,4 +1,4 @@
-# 🎭 Haptic Collection Media Player
+# Haptic Collection Media Player
 By Lucas Latzel and Nils Schnorr
 
 An interactive NFC-based media display system that presents HTML content when physical objects are placed on a reader. Perfect for museums, exhibitions, interactive art installations, and educational displays.

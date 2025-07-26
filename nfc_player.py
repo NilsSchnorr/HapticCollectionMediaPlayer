@@ -15,11 +15,22 @@ import sys
 # Add the python directory to the path so we can import pn532
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
 
+# Initialize NFC reader at module level (like the working examples)
+nfc_available = False
+pn532 = None
+
 try:
-    from pn532 import PN532_UART
     import RPi.GPIO as GPIO
-except ImportError:
-    print("Warning: Running without Raspberry Pi GPIO/PN532 support")
+    from pn532 import *  # Use same import as working example
+    
+    pn532 = PN532_UART(debug=False, reset=20)
+    ic, ver, rev, support = pn532.get_firmware_version()
+    print(f'Found PN532 with firmware version: {ver}.{rev}')
+    pn532.SAM_configuration()
+    nfc_available = True
+    print("NFC reader initialized successfully!")
+except Exception as e:
+    print(f"Error: Could not initialize NFC reader: {e}")
     print("This script requires a Raspberry Pi with PN532 NFC reader")
     sys.exit(1)
 
@@ -33,21 +44,8 @@ class NFCPlayer:
     def __init__(self):
         self.last_uid = None
         self.last_read_time = 0
-        self.pn532 = None
         self.mappings = {}
         
-    def initialize_nfc_reader(self):
-        """Initialize the PN532 NFC reader"""
-        try:
-            self.pn532 = PN532_UART(debug=False, reset=20)
-            ic, ver, rev, support = self.pn532.get_firmware_version()
-            print(f'Found PN532 with firmware version: {ver}.{rev}')
-            self.pn532.SAM_configuration()
-            return True
-        except Exception as e:
-            print(f"Error initializing NFC reader: {e}")
-            return False
-    
     def load_mappings(self):
         """Load NFC to HTML mappings from JSON file"""
         if os.path.exists(MAPPINGS_FILE):
@@ -108,7 +106,7 @@ class NFCPlayer:
                     self.load_mappings()
                 
                 # Try to read NFC chip
-                uid = self.pn532.read_passive_target(timeout=SCAN_INTERVAL)
+                uid = pn532.read_passive_target(timeout=SCAN_INTERVAL)
                 
                 if uid is not None:
                     # Convert UID to hex string
@@ -163,11 +161,6 @@ def main():
     
     # Initialize and run player
     player = NFCPlayer()
-    
-    # Initialize NFC reader
-    if not player.initialize_nfc_reader():
-        print("Failed to initialize NFC reader. Exiting.")
-        sys.exit(1)
     
     # Load mappings
     player.load_mappings()

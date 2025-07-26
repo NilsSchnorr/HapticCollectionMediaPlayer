@@ -18,11 +18,30 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Add the python directory to the path so we can import pn532
 sys.path.append(os.path.join(BASE_DIR, 'python'))
 
+# Initialize NFC reader at module level (like the working simple server)
+nfc_reader = None
+nfc_available = False
+
+print("Attempting to initialize NFC reader...")
+try:
+    import RPi.GPIO as GPIO
+    from pn532 import *  # Use same import as working example
+    
+    nfc_reader = PN532_UART(debug=False, reset=20)
+    ic, ver, rev, support = nfc_reader.get_firmware_version()
+    print(f'Found PN532 with firmware version: {ver}.{rev}')
+    nfc_reader.SAM_configuration()
+    nfc_available = True
+    print("NFC reader initialized successfully!")
+except Exception as e:
+    print(f"Could not initialize NFC reader: {e}")
+    print("Running in development mode without NFC reader")
+    nfc_available = False
+
 # Initialize Flask app
 app = Flask(__name__, static_folder='web_interface', template_folder='web_interface')
 
 # Global variables
-nfc_reader = None
 current_uid = None
 is_reading = False
 mappings_file = os.path.join(BASE_DIR, "nfc_mappings.json")
@@ -38,33 +57,11 @@ def save_mappings(mappings):
     with open(mappings_file, 'w') as f:
         json.dump(mappings, f, indent=2)
 
-# Initialize NFC reader in a separate function to avoid import errors on non-Pi systems
-def init_nfc_reader():
-    global nfc_reader
-    try:
-        from pn532 import PN532_UART
-        import RPi.GPIO as GPIO
-        
-        print("Initializing NFC reader...")
-        # Initialize the NFC reader using UART
-        nfc_reader = PN532_UART(debug=False, reset=20)
-        ic, ver, rev, support = nfc_reader.get_firmware_version()
-        print(f'Found PN532 with firmware version: {ver}.{rev}')
-        nfc_reader.SAM_configuration()
-        print("NFC reader initialized successfully!")
-        return True
-    except Exception as e:
-        print(f"Warning: Could not initialize NFC reader: {e}")
-        print("Running in development mode without NFC reader")
-        import traceback
-        traceback.print_exc()
-        return False
-
 # Background thread to continuously read NFC tags
 def nfc_reader_thread():
     global current_uid, is_reading
     
-    if not nfc_reader:
+    if not nfc_available:
         print("NFC reader not available, skipping reader thread")
         return
     
@@ -188,11 +185,8 @@ def test_nfc(uid):
     return jsonify({'success': True, 'uid': uid})
 
 if __name__ == '__main__':
-    # Try to initialize NFC reader
-    has_nfc = init_nfc_reader()
-    
     # Start NFC reader thread if available
-    if has_nfc:
+    if nfc_available:
         reader_thread = threading.Thread(target=nfc_reader_thread, daemon=True)
         reader_thread.start()
     

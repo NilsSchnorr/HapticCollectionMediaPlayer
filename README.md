@@ -1,6 +1,8 @@
 # 🎭 Haptic Collection Media Player
+By Lucas Latzel and Nils Schnorr
 
 An interactive NFC-based media display system that presents HTML content when physical objects are placed on a reader. Perfect for museums, exhibitions, interactive art installations, and educational displays.
+
 
 ## 🌟 Overview
 
@@ -43,7 +45,7 @@ chmod +x make_executable.sh
 ### 1. Clone the Repository
 ```bash
 cd ~/Documents/GitHub
-git clone https://github.com/yourusername/HapticCollectionMediaPlayer.git
+git clone https://github.com/NilsSchnorr/HapticCollectionMediaPlayer
 cd HapticCollectionMediaPlayer
 ```
 
@@ -257,19 +259,18 @@ This project is licensed under a Modified MIT License (Non-Commercial) - see the
 **Key points:**
 - ✅ Free to use, modify, and share for non-commercial purposes
 - ✅ Attribution required (Lucas Latzel and Nils Schnorr)
-- ❌ Commercial use prohibited without permission
+- ❌ Commercial use prohibited
 - 📚 Please cite our work if used in research (see LICENSE.txt)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 Built with:
 - Flask web framework
 - PN532 NFC library
-- Modern web technologies
 
 ---
 
-**Repository:** https://github.com/[yourusername]/HapticCollectionMediaPlayer
+**Repository:** https://github.com/NilsSchnorr/HapticCollectionMediaPlayer
 
 For issues, questions, or contributions, please visit the project repository.
 

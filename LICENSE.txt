@@ -33,14 +33,16 @@ CITATION REQUEST
 
 If you use this software in your research or project, please cite it as follows:
 
+Latzel, L. – Schnorr, N. (2025). Haptic Collection Media Player [Computer software]. 
+https://github.com/NilsSchnorr/HapticCollectionMediaPlayer
+
+
 BibTeX:
 @software{haptic_collection_media_player,
   author = {Lucas Latzel and Nils Schnorr},
   title = {Haptic Collection Media Player},
   year = {2025},
-  url = {}
+  url = {https://github.com/NilsSchnorr/HapticCollectionMediaPlayer}
 }
 
 --------------------------------------------------------------------------------
-
-For commercial use inquiries, please contact the authors.

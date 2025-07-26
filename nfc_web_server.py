@@ -42,18 +42,22 @@ def save_mappings(mappings):
 def init_nfc_reader():
     global nfc_reader
     try:
-        from pn532.uart import PN532_UART
+        from pn532 import PN532_UART
         import RPi.GPIO as GPIO
         
+        print("Initializing NFC reader...")
         # Initialize the NFC reader using UART
         nfc_reader = PN532_UART(debug=False, reset=20)
         ic, ver, rev, support = nfc_reader.get_firmware_version()
         print(f'Found PN532 with firmware version: {ver}.{rev}')
         nfc_reader.SAM_configuration()
+        print("NFC reader initialized successfully!")
         return True
     except Exception as e:
         print(f"Warning: Could not initialize NFC reader: {e}")
         print("Running in development mode without NFC reader")
+        import traceback
+        traceback.print_exc()
         return False
 
 # Background thread to continuously read NFC tags
@@ -66,9 +70,15 @@ def nfc_reader_thread():
     
     print("Starting NFC reader thread...")
     is_reading = True
+    read_count = 0
     
     while is_reading:
         try:
+            # Print debug every 10 reads
+            read_count += 1
+            if read_count % 10 == 0:
+                print(f"NFC reader thread active, attempts: {read_count}")
+            
             # Check if a card is available to read
             uid = nfc_reader.read_passive_target(timeout=0.5)
             
@@ -84,6 +94,8 @@ def nfc_reader_thread():
                 
         except Exception as e:
             print(f"Error reading NFC: {e}")
+            import traceback
+            traceback.print_exc()
             time.sleep(1)
 
 # Routes

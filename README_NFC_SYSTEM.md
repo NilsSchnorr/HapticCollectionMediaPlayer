@@ -122,9 +122,42 @@ HapticCollectionMediaPlayer/
 
 ## Troubleshooting
 
+### NFC Not Detecting Cards
+
+If the web interface opens but doesn't detect NFC cards:
+
+1. **Test with the debug script:**
+   ```bash
+   python3 test_nfc.py
+   ```
+   This uses the exact same pattern as the working example.
+
+2. **Try the simple server (no threading):**
+   ```bash
+   python3 simple_nfc_server.py
+   ```
+   This removes threading complications.
+
+3. **Run the debug script:**
+   ```bash
+   python3 debug_nfc.py
+   ```
+   This will show detailed import and initialization information.
+
+4. **Check console output** for error messages when starting `nfc_web_server.py`
+
+5. **Verify the working example still works:**
+   ```bash
+   cd python
+   python3 example_get_uid.py
+   ```
+
+### Common Issues
+
 - **NFC Reader Not Found**: Ensure the PN532 is properly connected and powered
 - **Permission Errors**: Run with `sudo` if you encounter GPIO permission issues
 - **Port Already in Use**: Change the port in `nfc_web_server.py` if 5000 is occupied
+- **Import Errors**: Make sure you're running from the HapticCollectionMediaPlayer directory
 
 ## Development Mode
 

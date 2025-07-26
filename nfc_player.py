@@ -16,7 +16,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
 
 try:
-    from pn532.uart import PN532_UART
+    from pn532 import PN532_UART
     import RPi.GPIO as GPIO
 except ImportError:
     print("Warning: Running without Raspberry Pi GPIO/PN532 support")

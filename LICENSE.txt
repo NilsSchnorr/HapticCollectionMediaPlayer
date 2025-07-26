@@ -38,14 +38,11 @@ BibTeX:
   author = {Lucas Latzel and Nils Schnorr},
   title = {Haptic Collection Media Player},
   year = {2025},
-  url = {}
+  url = {https://github.com/NilsSchnorr/HapticCollectionMediaPlayer}
 }
 
 --------------------------------------------------------------------------------
 
-For commercial use inquiries, please contact the authors.
-
---------------------------------------------------------------------------------
 
 THIRD-PARTY LICENSES
 

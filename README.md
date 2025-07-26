@@ -262,7 +262,7 @@ This project is licensed under a Modified MIT License (Non-Commercial) - see the
 - ❌ Commercial use prohibited
 - 📚 Please cite our work if used in research (see LICENSE.txt)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Built with:
 - Flask web framework

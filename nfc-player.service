@@ -1,0 +1,14 @@
+[Unit]
+Description=NFC HTML Player Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Documents/GitHub/HapticCollectionMediaPlayer
+ExecStart=/usr/bin/python3 /home/pi/Documents/GitHub/HapticCollectionMediaPlayer/nfc_player.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -262,11 +262,16 @@ This project is licensed under a Modified MIT License (Non-Commercial) - see the
 - ❌ Commercial use prohibited
 - 📚 Please cite our work if used in research (see LICENSE.txt)
 
-##  Acknowledgments
+## 🙏 Acknowledgments
 
 Built with:
 - Flask web framework
-- PN532 NFC library
+- PN532 NFC library by Waveshare/Yehui
+- Modern web technologies
+
+**Special thanks to:**
+- Waveshare for the PN532 NFC HAT library ([Wiki](https://www.waveshare.com/wiki/PN532_NFC_HAT))
+- The open-source community
 
 ---
 

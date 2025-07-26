@@ -33,16 +33,32 @@ CITATION REQUEST
 
 If you use this software in your research or project, please cite it as follows:
 
-Latzel, L. – Schnorr, N. (2025). Haptic Collection Media Player [Computer software]. 
-https://github.com/NilsSchnorr/HapticCollectionMediaPlayer
-
-
 BibTeX:
 @software{haptic_collection_media_player,
   author = {Lucas Latzel and Nils Schnorr},
   title = {Haptic Collection Media Player},
   year = {2025},
-  url = {https://github.com/NilsSchnorr/HapticCollectionMediaPlayer}
+  url = {}
 }
+
+--------------------------------------------------------------------------------
+
+For commercial use inquiries, please contact the authors.
+
+--------------------------------------------------------------------------------
+
+THIRD-PARTY LICENSES
+
+This project includes code from the following third-party sources:
+
+1. PN532 NFC Library (python/ directory)
+   Copyright (c) 2019 Yehui
+   Source: Waveshare PN532 NFC HAT
+   URL: https://www.waveshare.com/wiki/PN532_NFC_HAT
+   License: MIT License (see python/LICENSE)
+
+   The PN532 library is used under the MIT License, which permits use, copying,
+   modification, and distribution. The original copyright notice and license
+   are preserved in the python/LICENSE file.
 
 --------------------------------------------------------------------------------

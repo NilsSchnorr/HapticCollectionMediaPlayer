@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Alternative startup script for systems without bash
+Fixed startup script that properly starts both components
 """
 
 import os
@@ -16,46 +16,52 @@ def check_python_version():
         print("Error: Python 3.6 or higher is required")
         sys.exit(1)
 
-def install_dependencies():
-    """Install required Python packages"""
-    print("Installing/updating dependencies...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        print("Dependencies installed successfully")
-    except subprocess.CalledProcessError:
-        print("Warning: Some dependencies might not have installed correctly")
-        print("This is normal on non-Raspberry Pi systems")
-
 def start_web_server():
-    """Start the NFC web server"""
-    print("\nStarting NFC Web Server...")
+    """Start the NFC web server in background"""
+    print("\nStarting NFC Web Server in background...")
     try:
-        # Start the web server in a subprocess
+        # Start the web server in a subprocess (background)
         process = subprocess.Popen([sys.executable, "nfc_web_server.py"])
-        return process
+        time.sleep(3)  # Give it time to start
+        
+        # Check if process is still running
+        if process.poll() is None:
+            print("✓ Web server started successfully")
+            return process
+        else:
+            print("✗ Web server failed to start")
+            return None
     except Exception as e:
         print(f"Error starting web server: {e}")
         return None
 
-def open_web_interface():
-    """Open the web interface in default browser"""
-    print("Opening web interface...")
-    time.sleep(2)  # Wait for server to start
-    try:
-        webbrowser.open("http://localhost:5000")
-    except:
-        print("Please open http://localhost:5000 in your browser")
-
 def start_nfc_player():
-    """Start the NFC player"""
-    print("\nStarting NFC Player...")
+    """Start the NFC player in background"""
+    print("\nStarting NFC Player in background...")
     try:
-        # Start the player in a subprocess
+        # Start the player in a subprocess (background)
         process = subprocess.Popen([sys.executable, "nfc_player.py"])
-        return process
+        time.sleep(2)  # Give it time to start
+        
+        # Check if process is still running
+        if process.poll() is None:
+            print("✓ NFC Player started successfully")
+            return process
+        else:
+            print("✗ NFC Player failed to start")
+            return None
     except Exception as e:
         print(f"Error starting NFC player: {e}")
         return None
+
+def open_web_interface():
+    """Open the web interface in default browser"""
+    print("\nOpening web interface...")
+    try:
+        webbrowser.open("http://localhost:5000")
+        print("✓ Web interface opened")
+    except:
+        print("Please open http://localhost:5000 in your browser")
 
 def main():
     print("=========================================")
@@ -69,43 +75,58 @@ def main():
     script_dir = Path(__file__).parent
     os.chdir(script_dir)
     
-    # Install dependencies
-    install_dependencies()
-    
     # Start web server
     web_process = start_web_server()
     if not web_process:
-        print("Failed to start web server")
+        print("\nFailed to start web server. Exiting.")
         sys.exit(1)
+    
+    # Start NFC player
+    player_process = start_nfc_player()
+    if not player_process:
+        print("\nFailed to start NFC player.")
+        print("You can start it manually later with: python3 nfc_player.py")
     
     # Open web interface
     open_web_interface()
     
-    print("\nThe web server is now running at http://localhost:5000")
+    print("\n" + "="*50)
+    print("SYSTEM STATUS")
+    print("="*50)
+    print("✓ Web Server: Running at http://localhost:5000")
+    if player_process and player_process.poll() is None:
+        print("✓ NFC Player: Running (will open HTML files when chips are detected)")
+    else:
+        print("✗ NFC Player: Not running (start with: python3 nfc_player.py)")
+    print("\nPress Ctrl+C to stop all components")
+    print("="*50)
     
-    # Ask if user wants to start the player
+    # Monitor processes
     try:
-        response = input("\nDo you want to start the NFC Player now? (y/n): ").strip().lower()
-        if response == 'y':
-            player_process = start_nfc_player()
-        else:
-            player_process = None
-    except:
-        player_process = None
-    
-    print("\nSystem is running. Press Ctrl+C to stop all components.")
-    
-    # Wait for interruption
-    try:
-        if web_process:
-            web_process.wait()
+        while True:
+            # Check if processes are still running
+            web_running = web_process and web_process.poll() is None
+            player_running = player_process and player_process.poll() is None
+            
+            if not web_running:
+                print("\n⚠️  Web server stopped unexpectedly!")
+                break
+                
+            time.sleep(5)  # Check every 5 seconds
+            
     except KeyboardInterrupt:
         print("\n\nShutting down...")
-        if web_process:
+        
+        # Terminate processes
+        if web_process and web_process.poll() is None:
             web_process.terminate()
-        if player_process:
+            print("✓ Web server stopped")
+            
+        if player_process and player_process.poll() is None:
             player_process.terminate()
-        print("All components stopped.")
+            print("✓ NFC player stopped")
+            
+        print("\nAll components stopped.")
 
 if __name__ == "__main__":
     main()

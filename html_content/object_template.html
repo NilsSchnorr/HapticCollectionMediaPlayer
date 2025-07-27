@@ -50,18 +50,11 @@
         .font {
             position: absolute;
             top: 50%;
-            left: 2rem;
+            left: 1rem;
             transform: translateY(-50%);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-        
-        .font p {
-            color: #ffffff;
-            font-size: 0.9em;
-            margin: 0;
+            gap: 0.5rem;
         }
         
         .font button {
@@ -335,24 +328,7 @@
             font-weight: 400;
         }
         
-        /* Font size responsive adjustments */
-        @media screen and (min-width: 400px) {
-            .font {
-                gap: 1.5rem;
-            }
-        }
-        
-        @media screen and (min-width: 768px) {
-            .font {
-                gap: 2rem;
-            }
-        }
-        
-        @media screen and (min-width: 992px) {
-            .font {
-                gap: 2rem;
-            }
-        }
+
         
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -382,7 +358,7 @@
             
             /* Adjust font controls on mobile */
             .font {
-                left: 1rem;
+                left: 0.5rem;
             }
             
             header h1 {
@@ -428,7 +404,6 @@
 <body>
     <header>
         <div class="font">
-            <p>Change Font Size: </p>
             <button id="down">-</button>
             <button id="up">+</button>
         </div>

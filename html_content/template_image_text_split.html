@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{OBJECT_NAME}} - Haptic Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Root font size that everything will scale from */
+        html {
+            font-size: 16px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-size: 1rem;
+        }
+        
+        /* Header */
+        header {
+            background-color: #1a1a2e;
+            color: white;
+            padding: 1.5rem 0;
+            position: relative;
+            z-index: 100;
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        
+        /* Font Size Controls */
+        .font {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .font button {
+            width: 30px;
+            height: 30px;
+            background-color: transparent;
+            border: 1px solid #667eea;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 1.2em;
+        }
+        
+        .font button:hover {
+            background-color: #667eea;
+        }
+        
+        /* Main Container */
+        .main-wrapper {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #0a0a0a;
+        }
+        
+        /* Top Information Row - Image Left (1/3), Text Right (2/3) */
+        .top-info-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+            min-height: 300px;
+        }
+        
+        .info-image {
+            flex: 0 0 33.333%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .info-image-container {
+            width: 100%;
+            background-color: #0a0a0a;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+            max-width: 350px;
+        }
+        
+        .info-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .image-placeholder {
+            color: #667eea;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .info-text {
+            flex: 0 0 66.666%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 1rem;
+        }
+        
+        .info-text h2 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-size: 2em;
+            font-weight: 500;
+            border-bottom: 1px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .info-text p {
+            color: #e0e0e0;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+        
+        .quick-facts {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .fact-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .fact-label {
+            color: #667eea;
+            font-weight: 500;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .fact-value {
+            color: #ffffff;
+            font-size: 1.1em;
+            margin-top: 0.25rem;
+        }
+        
+        /* Content Row */
+        .content-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Model Section */
+        .model-section {
+            flex: 1.5;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            height: 600px;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Details Panel */
+        .details-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .detail-card {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .detail-card:hover {
+            border-color: #667eea;
+        }
+        
+        .detail-card h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.2em;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .detail-card h3::before {
+            content: '';
+            width: 4px;
+            height: 1.2em;
+            background-color: #667eea;
+            border-radius: 2px;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+        }
+        
+        .detail-label {
+            color: #667eea;
+            font-weight: 500;
+            min-width: 120px;
+            flex-shrink: 0;
+            font-size: 0.9em;
+        }
+        
+        .detail-value {
+            color: #e0e0e0;
+            font-size: 0.9em;
+        }
+        
+        /* Additional Information Section */
+        .additional-info {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .info-block h4 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.1em;
+            font-weight: 500;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        
+        .info-block p {
+            color: #e0e0e0;
+            line-height: 1.7;
+        }
+        
+        .info-block ul {
+            list-style: none;
+            color: #e0e0e0;
+        }
+        
+        .info-block ul li {
+            padding-left: 1.5rem;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info-block ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+        }
+        
+        /* Tags */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .tag {
+            background-color: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 400;
+            transition: all 0.2s ease;
+        }
+        
+        .tag:hover {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Model Controls */
+        .model-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a2e;
+            padding: 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            gap: 0.75rem;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            background-color: transparent;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+        
+        .control-btn:hover {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .top-info-row {
+                flex-direction: column;
+            }
+            
+            .info-image {
+                flex: 1;
+                max-width: 100%;
+            }
+            
+            .info-text {
+                flex: 1;
+                padding-left: 0;
+            }
+            
+            .content-row {
+                flex-direction: column;
+            }
+            
+            .model-section {
+                height: 500px;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+            }
+            
+            .detail-label {
+                margin-bottom: 0.25rem;
+            }
+            
+            .font {
+                left: 0.5rem;
+            }
+            
+            header h1 {
+                padding: 0 4rem;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8896ea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="font">
+            <button id="down">-</button>
+            <button id="up">+</button>
+        </div>
+        <h1>{{OBJECT_NAME}}</h1>
+    </header>
+    
+    <div class="main-wrapper">
+        <!-- Top Information Row -->
+        <div class="top-info-row">
+            <div class="info-image">
+                <div class="info-image-container">
+                    <!-- Replace src with actual image path -->
+                    <img src="{{MAIN_IMAGE_PATH}}" alt="{{OBJECT_NAME}}">
+                    <!-- Or use placeholder:
+                    <div class="image-placeholder">
+                        <p>Main Image</p>
+                        <p>{{IMAGE_DIMENSIONS}}</p>
+                    </div>
+                    -->
+                </div>
+            </div>
+            
+            <div class="info-text">
+                <h2>{{OBJECT_TITLE}}</h2>
+                <p>{{MAIN_DESCRIPTION}}</p>
+                <p>{{SECONDARY_DESCRIPTION}}</p>
+                
+                <div class="quick-facts">
+                    <div class="fact-item">
+                        <div class="fact-label">Dating</div>
+                        <div class="fact-value">{{DATING}}</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-label">Origin</div>
+                        <div class="fact-value">{{ORIGIN}}</div>
+                    </div>
+                    <div class="fact-item">
+                        <div class="fact-label">Material</div>
+                        <div class="fact-value">{{MATERIAL}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Row -->
+        <div class="content-row">
+            <!-- Model Section -->
+            <div class="model-section">
+                <div id="canvas-container"></div>
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Loading 3D Model...</p>
+                </div>
+                
+                <!-- Model Controls -->
+                <div class="model-controls" style="display: none;" id="modelControls">
+                    <button class="control-btn" onclick="resetCamera()">Reset View</button>
+                    <button class="control-btn" onclick="toggleRotation()">Toggle Rotation</button>
+                    <button class="control-btn" onclick="toggleWireframe()">Wireframe</button>
+                </div>
+            </div>
+            
+            <!-- Details Panel -->
+            <div class="details-panel">
+                <div class="detail-card">
+                    <h3>Physical Characteristics</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Dimensions:</span>
+                        <span class="detail-value">{{DIMENSIONS}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Weight:</span>
+                        <span class="detail-value">{{WEIGHT}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Condition:</span>
+                        <span class="detail-value">{{CONDITION}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Restoration:</span>
+                        <span class="detail-value">{{RESTORATION}}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>Collection Information</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Inventory №:</span>
+                        <span class="detail-value">{{INVENTORY_NUMBER}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Collection:</span>
+                        <span class="detail-value">{{COLLECTION}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Acquisition:</span>
+                        <span class="detail-value">{{ACQUISITION}}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">{{LOCATION}}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>Related Tags</h3>
+                    <div class="tag-container">
+                        <span class="tag">{{TAG_1}}</span>
+                        <span class="tag">{{TAG_2}}</span>
+                        <span class="tag">{{TAG_3}}</span>
+                        <span class="tag">{{TAG_4}}</span>
+                        <span class="tag">{{TAG_5}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="additional-info">
+            <h3 style="color: #ffffff; font-size: 1.5em; margin-bottom: 0.5rem;">Additional Information</h3>
+            
+            <div class="info-grid">
+                <div class="info-block">
+                    <h4>Historical Context</h4>
+                    <p>{{HISTORICAL_CONTEXT}}</p>
+                </div>
+                
+                <div class="info-block">
+                    <h4>Cultural Significance</h4>
+                    <p>{{CULTURAL_SIGNIFICANCE}}</p>
+                </div>
+                
+                <div class="info-block">
+                    <h4>Technical Details</h4>
+                    <ul>
+                        <li>{{TECHNICAL_DETAIL_1}}</li>
+                        <li>{{TECHNICAL_DETAIL_2}}</li>
+                        <li>{{TECHNICAL_DETAIL_3}}</li>
+                        <li>{{TECHNICAL_DETAIL_4}}</li>
+                    </ul>
+                </div>
+                
+                <div class="info-block">
+                    <h4>References</h4>
+                    <p>{{REFERENCES}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js Scripts -->
+    <script src="js/three.min.js"></script>
+    <script src="js/GLTFLoader.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    
+    <script>
+        // Configuration
+        const MODEL_PATH = 'models/{{MODEL_FILENAME}}';
+        
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let model;
+        let isRotating = true;
+        let mixer;
+        const clock = new THREE.Clock();
+        
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Create camera
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(
+                45,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            scene.add(directionalLight);
+            
+            // Add subtle purple accent light
+            const accentLight = new THREE.PointLight(0x667eea, 0.3, 100);
+            accentLight.position.set(-5, 5, 5);
+            scene.add(accentLight);
+            
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 1;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 2;
+            
+            // Add ground plane
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a2e,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Load model
+            loadModel();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start animation
+            animate();
+        }
+        
+        function loadModel() {
+            const loader = new THREE.GLTFLoader();
+            
+            loader.load(
+                MODEL_PATH,
+                function (gltf) {
+                    model = gltf.scene;
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    
+                    // Center and scale model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 3 / maxDim;
+                    model.scale.setScalar(scale);
+                    
+                    scene.add(model);
+                    
+                    // Set up animations if any
+                    if (gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        const action = mixer.clipAction(gltf.animations[0]);
+                        action.play();
+                    }
+                    
+                    // Hide loading spinner and show controls
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    document.getElementById('modelControls').style.display = 'flex';
+                },
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                function (error) {
+                    console.error('An error occurred loading the model:', error);
+                    createPlaceholderModel();
+                }
+            );
+        }
+        
+        function createPlaceholderModel() {
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x667eea,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            
+            model = new THREE.Mesh(geometry, material);
+            model.castShadow = true;
+            model.receiveShadow = true;
+            scene.add(model);
+            
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('modelControls').style.display = 'flex';
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            if (model && isRotating) {
+                model.rotation.y += 0.005;
+            }
+            
+            if (mixer) {
+                mixer.update(clock.getDelta());
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function resetCamera() {
+            camera.position.set(0, 2, 5);
+            controls.reset();
+        }
+        
+        function toggleRotation() {
+            isRotating = !isRotating;
+        }
+        
+        function toggleWireframe() {
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        }
+        
+        window.addEventListener('load', init);
+        
+        // Font size controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const increment = document.getElementById("up");
+            const decrement = document.getElementById("down");
+            const html = document.documentElement;
+            const step = 2;
+            const minSize = 12;
+            const maxSize = 24;
+            
+            let currentSize = parseInt(window.getComputedStyle(html).fontSize);
+            
+            increment.onclick = function() {
+                if (currentSize < maxSize) {
+                    currentSize += step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+            
+            decrement.onclick = function() {
+                if (currentSize > minSize) {
+                    currentSize -= step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+        });
+    </script>
+</body>
+</html>

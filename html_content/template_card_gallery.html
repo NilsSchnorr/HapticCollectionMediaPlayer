@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{OBJECT_NAME}} - Haptic Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Root font size that everything will scale from */
+        html {
+            font-size: 16px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-size: 1rem;
+        }
+        
+        /* Header */
+        header {
+            background-color: #1a1a2e;
+            color: white;
+            padding: 1.5rem 0;
+            position: relative;
+            z-index: 100;
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        
+        /* Font Size Controls */
+        .font {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .font button {
+            width: 30px;
+            height: 30px;
+            background-color: transparent;
+            border: 1px solid #667eea;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 1.2em;
+        }
+        
+        .font button:hover {
+            background-color: #667eea;
+        }
+        
+        /* Main Container */
+        .main-wrapper {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #0a0a0a;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        
+        .hero-section h2 {
+            color: #ffffff;
+            font-size: 2.5em;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .hero-subtitle {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .hero-description {
+            color: #e0e0e0;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        
+        /* Model and Info Section */
+        .model-info-section {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Model Container */
+        .model-container {
+            flex: 2;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            height: 600px;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Quick Info Panel */
+        .quick-info-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .info-card {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .info-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .info-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .info-card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .info-card h3 {
+            color: #ffffff;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .info-card-content {
+            color: #e0e0e0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* Gallery Section */
+        .gallery-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-header h3 {
+            color: #ffffff;
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+        
+        .section-header-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #667eea, transparent);
+            margin-left: 2rem;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .gallery-card {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gallery-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            background-color: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .gallery-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-card:hover .gallery-image img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-content {
+            padding: 1.5rem;
+        }
+        
+        .gallery-title {
+            color: #ffffff;
+            font-size: 1.1em;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .gallery-description {
+            color: #e0e0e0;
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .gallery-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #2a2a3e;
+        }
+        
+        .gallery-meta-item {
+            color: #667eea;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-block {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+        }
+        
+        .detail-block h4 {
+            color: #ffffff;
+            font-size: 1.3em;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .detail-list {
+            list-style: none;
+        }
+        
+        .detail-list li {
+            display: flex;
+            margin-bottom: 1rem;
+            align-items: flex-start;
+        }
+        
+        .detail-list-label {
+            color: #667eea;
+            font-weight: 500;
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+        
+        .detail-list-value {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        /* Tags Section */
+        .tags-section {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .tags-section h4 {
+            color: #ffffff;
+            font-size: 1.2em;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        
+        .tag {
+            background-color: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .tag:hover {
+            background-color: #667eea;
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Model Controls */
+        .model-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a2e;
+            padding: 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            gap: 0.75rem;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            background-color: transparent;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+        
+        .control-btn:hover {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .model-info-section {
+                flex-direction: column;
+            }
+            
+            .model-container {
+                height: 500px;
+            }
+            
+            .quick-info-panel {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .info-card {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-width: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .hero-section h2 {
+                font-size: 2em;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-card {
+                flex: 1 1 100%;
+            }
+            
+            .detail-list li {
+                flex-direction: column;
+            }
+            
+            .detail-list-label {
+                margin-bottom: 0.25rem;
+            }
+            
+            .font {
+                left: 0.5rem;
+            }
+            
+            header h1 {
+                padding: 0 4rem;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8896ea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="font">
+            <button id="down">-</button>
+            <button id="up">+</button>
+        </div>
+        <h1>{{OBJECT_NAME}}</h1>
+    </header>
+    
+    <div class="main-wrapper">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h2>{{HERO_TITLE}}</h2>
+            <p class="hero-subtitle">{{HERO_SUBTITLE}}</p>
+            <p class="hero-description">{{HERO_DESCRIPTION}}</p>
+        </div>
+        
+        <!-- Model and Info Section -->
+        <div class="model-info-section">
+            <!-- 3D Model Container -->
+            <div class="model-container">
+                <div id="canvas-container"></div>
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Loading 3D Model...</p>
+                </div>
+                
+                <!-- Model Controls -->
+                <div class="model-controls" style="display: none;" id="modelControls">
+                    <button class="control-btn" onclick="resetCamera()">Reset View</button>
+                    <button class="control-btn" onclick="toggleRotation()">Toggle Rotation</button>
+                    <button class="control-btn" onclick="toggleWireframe()">Wireframe</button>
+                </div>
+            </div>
+            
+            <!-- Quick Info Panel -->
+            <div class="quick-info-panel">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">📅</div>
+                        <h3>Dating & Origin</h3>
+                    </div>
+                    <div class="info-card-content">
+                        <strong>Period:</strong> {{DATING}}<br>
+                        <strong>Origin:</strong> {{ORIGIN}}<br>
+                        <strong>Culture:</strong> {{CULTURE}}
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">🎨</div>
+                        <h3>Materials & Technique</h3>
+                    </div>
+                    <div class="info-card-content">
+                        <strong>Material:</strong> {{MATERIAL}}<br>
+                        <strong>Technique:</strong> {{TECHNIQUE}}<br>
+                        <strong>Dimensions:</strong> {{DIMENSIONS}}
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">🏛️</div>
+                        <h3>Collection Details</h3>
+                    </div>
+                    <div class="info-card-content">
+                        <strong>Collection:</strong> {{COLLECTION}}<br>
+                        <strong>Inventory:</strong> {{INVENTORY_NUMBER}}<br>
+                        <strong>Location:</strong> {{LOCATION}}
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">✨</div>
+                        <h3>Conservation Status</h3>
+                    </div>
+                    <div class="info-card-content">
+                        {{CONSERVATION_STATUS}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gallery Section -->
+        <div class="gallery-section">
+            <div class="section-header">
+                <h3>Related Views & Details</h3>
+                <div class="section-header-line"></div>
+            </div>
+            
+            <div class="gallery-grid">
+                <!-- Gallery Card 1 -->
+                <div class="gallery-card">
+                    <div class="gallery-image">
+                        <img src="{{GALLERY_IMAGE_1}}" alt="{{GALLERY_TITLE_1}}">
+                        <!-- Or placeholder:
+                        <div style="color: #667eea;">Image Placeholder</div>
+                        -->
+                    </div>
+                    <div class="gallery-content">
+                        <h4 class="gallery-title">{{GALLERY_TITLE_1}}</h4>
+                        <p class="gallery-description">{{GALLERY_DESCRIPTION_1}}</p>
+                        <div class="gallery-meta">
+                            <span class="gallery-meta-item">{{GALLERY_META_1_LEFT}}</span>
+                            <span class="gallery-meta-item">{{GALLERY_META_1_RIGHT}}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gallery Card 2 -->
+                <div class="gallery-card">
+                    <div class="gallery-image">
+                        <img src="{{GALLERY_IMAGE_2}}" alt="{{GALLERY_TITLE_2}}">
+                    </div>
+                    <div class="gallery-content">
+                        <h4 class="gallery-title">{{GALLERY_TITLE_2}}</h4>
+                        <p class="gallery-description">{{GALLERY_DESCRIPTION_2}}</p>
+                        <div class="gallery-meta">
+                            <span class="gallery-meta-item">{{GALLERY_META_2_LEFT}}</span>
+                            <span class="gallery-meta-item">{{GALLERY_META_2_RIGHT}}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gallery Card 3 -->
+                <div class="gallery-card">
+                    <div class="gallery-image">
+                        <img src="{{GALLERY_IMAGE_3}}" alt="{{GALLERY_TITLE_3}}">
+                    </div>
+                    <div class="gallery-content">
+                        <h4 class="gallery-title">{{GALLERY_TITLE_3}}</h4>
+                        <p class="gallery-description">{{GALLERY_DESCRIPTION_3}}</p>
+                        <div class="gallery-meta">
+                            <span class="gallery-meta-item">{{GALLERY_META_3_LEFT}}</span>
+                            <span class="gallery-meta-item">{{GALLERY_META_3_RIGHT}}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gallery Card 4 -->
+                <div class="gallery-card">
+                    <div class="gallery-image">
+                        <img src="{{GALLERY_IMAGE_4}}" alt="{{GALLERY_TITLE_4}}">
+                    </div>
+                    <div class="gallery-content">
+                        <h4 class="gallery-title">{{GALLERY_TITLE_4}}</h4>
+                        <p class="gallery-description">{{GALLERY_DESCRIPTION_4}}</p>
+                        <div class="gallery-meta">
+                            <span class="gallery-meta-item">{{GALLERY_META_4_LEFT}}</span>
+                            <span class="gallery-meta-item">{{GALLERY_META_4_RIGHT}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detailed Information -->
+        <div class="details-grid">
+            <div class="detail-block">
+                <h4>Historical Context</h4>
+                <ul class="detail-list">
+                    <li>
+                        <span class="detail-list-label">Period:</span>
+                        <span class="detail-list-value">{{HISTORICAL_PERIOD}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Dynasty/Era:</span>
+                        <span class="detail-list-value">{{DYNASTY_ERA}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Historical Significance:</span>
+                        <span class="detail-list-value">{{HISTORICAL_SIGNIFICANCE}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Related Events:</span>
+                        <span class="detail-list-value">{{RELATED_EVENTS}}</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="detail-block">
+                <h4>Technical Analysis</h4>
+                <ul class="detail-list">
+                    <li>
+                        <span class="detail-list-label">Construction:</span>
+                        <span class="detail-list-value">{{CONSTRUCTION_METHOD}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Material Analysis:</span>
+                        <span class="detail-list-value">{{MATERIAL_ANALYSIS}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Tool Marks:</span>
+                        <span class="detail-list-value">{{TOOL_MARKS}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Restoration Work:</span>
+                        <span class="detail-list-value">{{RESTORATION_DETAILS}}</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="detail-block">
+                <h4>Provenance</h4>
+                <ul class="detail-list">
+                    <li>
+                        <span class="detail-list-label">Discovery:</span>
+                        <span class="detail-list-value">{{DISCOVERY_INFO}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Previous Collections:</span>
+                        <span class="detail-list-value">{{PREVIOUS_COLLECTIONS}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Acquisition:</span>
+                        <span class="detail-list-value">{{ACQUISITION_DETAILS}}</span>
+                    </li>
+                    <li>
+                        <span class="detail-list-label">Documentation:</span>
+                        <span class="detail-list-value">{{DOCUMENTATION}}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Tags Section -->
+        <div class="tags-section">
+            <h4>Related Topics & Keywords</h4>
+            <div class="tags-container">
+                <span class="tag">{{TAG_1}}</span>
+                <span class="tag">{{TAG_2}}</span>
+                <span class="tag">{{TAG_3}}</span>
+                <span class="tag">{{TAG_4}}</span>
+                <span class="tag">{{TAG_5}}</span>
+                <span class="tag">{{TAG_6}}</span>
+                <span class="tag">{{TAG_7}}</span>
+                <span class="tag">{{TAG_8}}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js Scripts -->
+    <script src="js/three.min.js"></script>
+    <script src="js/GLTFLoader.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    
+    <script>
+        // Configuration
+        const MODEL_PATH = 'models/{{MODEL_FILENAME}}';
+        
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let model;
+        let isRotating = true;
+        let mixer;
+        const clock = new THREE.Clock();
+        
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Create camera
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(
+                45,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            scene.add(directionalLight);
+            
+            // Add subtle purple accent light
+            const accentLight = new THREE.PointLight(0x667eea, 0.3, 100);
+            accentLight.position.set(-5, 5, 5);
+            scene.add(accentLight);
+            
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 1;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 2;
+            
+            // Add ground plane
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a2e,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Load model
+            loadModel();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start animation
+            animate();
+        }
+        
+        function loadModel() {
+            const loader = new THREE.GLTFLoader();
+            
+            loader.load(
+                MODEL_PATH,
+                function (gltf) {
+                    model = gltf.scene;
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    
+                    // Center and scale model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 3 / maxDim;
+                    model.scale.setScalar(scale);
+                    
+                    scene.add(model);
+                    
+                    // Set up animations if any
+                    if (gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        const action = mixer.clipAction(gltf.animations[0]);
+                        action.play();
+                    }
+                    
+                    // Hide loading spinner and show controls
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    document.getElementById('modelControls').style.display = 'flex';
+                },
+                function (xhr) {
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+                },
+                function (error) {
+                    console.error('An error occurred loading the model:', error);
+                    createPlaceholderModel();
+                }
+            );
+        }
+        
+        function createPlaceholderModel() {
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x667eea,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            
+            model = new THREE.Mesh(geometry, material);
+            model.castShadow = true;
+            model.receiveShadow = true;
+            scene.add(model);
+            
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('modelControls').style.display = 'flex';
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            if (model && isRotating) {
+                model.rotation.y += 0.005;
+            }
+            
+            if (mixer) {
+                mixer.update(clock.getDelta());
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function resetCamera() {
+            camera.position.set(0, 2, 5);
+            controls.reset();
+        }
+        
+        function toggleRotation() {
+            isRotating = !isRotating;
+        }
+        
+        function toggleWireframe() {
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        }
+        
+        window.addEventListener('load', init);
+        
+        // Font size controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const increment = document.getElementById("up");
+            const decrement = document.getElementById("down");
+            const html = document.documentElement;
+            const step = 2;
+            const minSize = 12;
+            const maxSize = 24;
+            
+            let currentSize = parseInt(window.getComputedStyle(html).fontSize);
+            
+            increment.onclick = function() {
+                if (currentSize < maxSize) {
+                    currentSize += step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+            
+            decrement.onclick = function() {
+                if (currentSize > minSize) {
+                    currentSize -= step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+        });
+    </script>
+</body>
+</html>

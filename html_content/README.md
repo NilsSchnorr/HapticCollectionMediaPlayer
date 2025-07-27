@@ -35,15 +35,20 @@ To create a new object page using `object_template.html`:
 
 ### Second Row (Image and Details)
    - `{{IMAGE_PATH}}` - Path to reference image (e.g., `images/athena-reference.jpg`)
+   
+   **Object Information (Middle Panel):**
    - `{{DATING}}` - Time period/date of the object
    - `{{ORIGIN}}` - Where the object is from
    - `{{MATERIAL}}` - What the object is made of
    - `{{DIMENSIONS}}` - Size of the object
+   - `{{CONSERVATION_STATUS}}` - Current condition
+   
+   **Collection Metadata (Right Panel):**
    - `{{COLLECTION}}` - Which collection it belongs to
    - `{{INVENTORY_NUMBER}}` - Catalog/inventory number
    - `{{ACQUISITION}}` - How and when it was acquired
-   - `{{CONSERVATION_STATUS}}` - Current condition
    - `{{DISPLAY_LOCATION}}` - Where it's currently displayed
+   - `{{LAST_UPDATED}}` - When the information was last updated
 
 ## Adding 3D Models
 
@@ -67,9 +72,17 @@ To create a new object page using `object_template.html`:
 
 ## Features
 
+- **Font Size Controls**: 
+  - Two buttons in the top-left corner (small A and large A)
+  - Adjustable from 70% to 150% of default size
+  - Changes apply to current session only
 - **Two-Row Layout**: 
   - First row: Text content and 3D model viewer
-  - Second row: Reference image and object metadata
+  - Second row: Reference image and split information panels
+- **Three-Panel Second Row**:
+  - Left: Reference image
+  - Middle: Object Information (physical details)
+  - Right: Collection Metadata (administrative details)
 - **Responsive Design**: Works on desktop and mobile devices
 - **3D Controls**: 
   - Mouse/touch rotation
@@ -105,25 +118,37 @@ The template uses a professional, scientific dark theme with purple accents:
 
 ## Example Detail Items
 
-You can customize the detail labels and values in the second row. Here are some examples:
+The information is now split into two panels:
 
+### Object Information Panel (Physical Details)
 **For Archaeological Objects:**
 - Dating: 5th century BCE
 - Origin: Athens, Greece
 - Material: Marble, Pentelic
 - Dimensions: Height: 2.13m
+- Conservation Status: Excellent condition
 
 **For Modern Artworks:**
 - Created: 2023
 - Artist: John Doe
 - Medium: Bronze and steel
 - Dimensions: 150 x 80 x 60 cm
+- Condition: Pristine
 
-**For Historical Artifacts:**
-- Period: Medieval, 12th century
-- Provenance: Winchester Cathedral
-- Material: Oak wood, iron fittings
-- Conservation: Restored 2020
+### Collection Metadata Panel (Administrative Details)
+**Standard fields:**
+- Collection: Haptic Collection
+- Inventory Number: HC-2024-0042
+- Acquisition: 2024, Private donation
+- Display Location: Gallery 3, Section A
+- Last Updated: January 2025
+
+**Additional options:**
+- Provenance: Previous ownership history
+- Exhibition History: Past displays
+- Publications: Referenced in catalogs
+- Insurance Value: For internal use
+- Access Restrictions: If applicable
 
 ## Tips
 

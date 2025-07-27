@@ -19,6 +19,12 @@
             height: 100vh;
             overflow-x: hidden;
             overflow-y: auto;
+            font-size: 16px;
+        }
+        
+        /* Main content wrapper for font size control */
+        main {
+            font-size: 16px;
         }
         
         /* Header */
@@ -37,6 +43,59 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
             color: #ffffff;
+        }
+        
+        /* Font Size Controls */
+        .font {
+            position: absolute;
+            top: 50%;
+            left: 2rem;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        
+        .font p {
+            color: #ffffff;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .font button {
+            width: 30px;
+            height: 30px;
+            background-color: transparent;
+            border: 1px solid #667eea;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 1.2rem;
+        }
+        
+        .font button:hover {
+            background-color: #667eea;
+        }
+        
+        @media screen and (min-width: 400px) {
+            .font {
+                gap: 1.5rem;
+            }
+        }
+        
+        @media screen and (min-width: 768px) {
+            .font {
+                gap: 2rem;
+            }
+        }
+        
+        @media screen and (min-width: 992px) {
+            .font {
+                gap: 2rem;
+            }
         }
         
         /* Main Container */
@@ -133,7 +192,7 @@
             border: 1px solid #2a2a3e;
             border-radius: 4px;
             padding: 1.5rem;
-            max-width: 600px;
+            max-width: 400px;
         }
         
         .image-section h3 {
@@ -171,14 +230,24 @@
         
         /* Details Section */
         .details-section {
-            flex: 1.5;
+            flex: 1;
             background-color: #1a1a2e;
             border: 1px solid #2a2a3e;
             border-radius: 4px;
             padding: 1.5rem;
         }
         
-        .details-section h3 {
+        /* Metadata Section */
+        .metadata-section {
+            flex: 1;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+        
+        .details-section h3,
+        .metadata-section h3 {
             color: #ffffff;
             margin-bottom: 1rem;
             font-size: 1.2rem;
@@ -305,6 +374,31 @@
             .detail-label {
                 margin-bottom: 0.25rem;
             }
+            
+            /* Adjust font controls on mobile */
+            .font {
+                left: 1rem;
+            }
+            
+            header h1 {
+                padding: 0 4rem; /* Make room for font controls */
+            }
+        }
+        
+        @media (max-width: 1400px) {
+            .second-row {
+                flex-wrap: wrap;
+            }
+            
+            .image-section {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
+            
+            .details-section,
+            .metadata-section {
+                flex: 1 1 45%;
+            }
         }
         
         /* Scrollbar Styling */
@@ -328,9 +422,15 @@
 </head>
 <body>
     <header>
+        <div class="font">
+            <p>Change Font Size: </p>
+            <button id="down">-</button>
+            <button id="up">+</button>
+        </div>
         <h1>{{OBJECT_NAME}}</h1>
     </header>
     
+    <main>
     <div class="main-wrapper">
         <!-- First Row -->
         <div class="first-row">
@@ -426,6 +526,18 @@
                 </div>
                 
                 <div class="detail-item">
+                    <span class="detail-label">Conservation Status:</span>
+                    <span class="detail-value">{{CONSERVATION_STATUS}}</span>
+                </div>
+                
+                <!-- Add more object-specific detail items as needed -->
+            </div>
+            
+            <!-- Metadata Section -->
+            <div class="metadata-section">
+                <h3>Collection Metadata</h3>
+                
+                <div class="detail-item">
                     <span class="detail-label">Collection:</span>
                     <span class="detail-value">{{COLLECTION}}</span>
                 </div>
@@ -441,19 +553,20 @@
                 </div>
                 
                 <div class="detail-item">
-                    <span class="detail-label">Conservation Status:</span>
-                    <span class="detail-value">{{CONSERVATION_STATUS}}</span>
-                </div>
-                
-                <div class="detail-item">
                     <span class="detail-label">Display Location:</span>
                     <span class="detail-value">{{DISPLAY_LOCATION}}</span>
                 </div>
                 
-                <!-- Add more detail items as needed -->
+                <div class="detail-item">
+                    <span class="detail-label">Last Updated:</span>
+                    <span class="detail-value">{{LAST_UPDATED}}</span>
+                </div>
+                
+                <!-- Add more metadata items as needed -->
             </div>
         </div>
     </div>
+    </main>
     
     <!-- Three.js Scripts - Local copies for offline use -->
     <!-- Three.js is Copyright © 2010-2025 three.js authors, MIT License -->
@@ -660,6 +773,23 @@
         
         // Initialize on load
         window.addEventListener('load', init);
+        
+        // Font size controls
+        const increment = document.getElementById("up"),
+              decrement = document.getElementById("down"),
+              fsize = document.querySelector("main"),
+              step = 2;
+        
+        // Set initial font size
+        fsize.style.fontSize = "16px";
+        
+        increment.onclick = function() {
+            fsize.style.fontSize = parseInt(fsize.style.fontSize) + step + "px";
+        };
+        
+        decrement.onclick = function() {
+            fsize.style.fontSize = parseInt(fsize.style.fontSize) - step + "px";
+        };
     </script>
 </body>
 </html>

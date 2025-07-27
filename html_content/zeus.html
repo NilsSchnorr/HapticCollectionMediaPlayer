@@ -588,10 +588,10 @@
             container.appendChild(renderer.domElement);
             
             // Add lights - enhanced for better model visibility
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
             scene.add(ambientLight);
             
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
             directionalLight.position.set(10, 10, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.camera.near = 0.1;
@@ -605,12 +605,12 @@
             scene.add(directionalLight);
             
             // Add subtle purple accent light
-            const accentLight = new THREE.PointLight(0x667eea, 0.4, 100);
+            const accentLight = new THREE.PointLight(0x667eea, 0.5, 100);
             accentLight.position.set(-5, 5, 5);
             scene.add(accentLight);
             
             // Add a fill light to brighten shadows
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
             fillLight.position.set(-10, 5, -5);
             scene.add(fillLight);
             

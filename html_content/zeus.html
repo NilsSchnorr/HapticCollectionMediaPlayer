@@ -11,6 +11,11 @@
             box-sizing: border-box;
         }
         
+        /* Root font size that everything will scale from */
+        html {
+            font-size: 16px;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background-color: #0a0a0a;
@@ -19,12 +24,8 @@
             height: 100vh;
             overflow-x: hidden;
             overflow-y: auto;
-            font-size: 16px;
-        }
-        
-        /* Main content wrapper for font size control */
-        main {
-            font-size: 16px;
+            /* Base font size - all other sizes will be relative to this */
+            font-size: 1rem;
         }
         
         /* Header */
@@ -38,7 +39,7 @@
         
         header h1 {
             text-align: center;
-            font-size: 2rem;
+            font-size: 2em;
             font-weight: 400;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -59,7 +60,7 @@
         
         .font p {
             color: #ffffff;
-            font-size: 0.9rem;
+            font-size: 0.9em;
             margin: 0;
         }
         
@@ -73,29 +74,11 @@
             border-radius: 4px;
             transition: all 0.2s ease;
             font-weight: 500;
-            font-size: 1.2rem;
+            font-size: 1.2em;
         }
         
         .font button:hover {
             background-color: #667eea;
-        }
-        
-        @media screen and (min-width: 400px) {
-            .font {
-                gap: 1.5rem;
-            }
-        }
-        
-        @media screen and (min-width: 768px) {
-            .font {
-                gap: 2rem;
-            }
-        }
-        
-        @media screen and (min-width: 992px) {
-            .font {
-                gap: 2rem;
-            }
         }
         
         /* Main Container */
@@ -128,7 +111,7 @@
         .content-section h2 {
             color: #ffffff;
             margin-bottom: 1.5rem;
-            font-size: 1.5rem;
+            font-size: 1.5em;
             font-weight: 500;
             border-bottom: 1px solid #667eea;
             padding-bottom: 0.5rem;
@@ -138,7 +121,7 @@
             color: #ffffff;
             margin-top: 1.5rem;
             margin-bottom: 1rem;
-            font-size: 1.2rem;
+            font-size: 1.2em;
             font-weight: 500;
         }
         
@@ -146,7 +129,6 @@
             margin-bottom: 1rem;
             color: #e0e0e0;
             text-align: justify;
-            font-size: 0.95rem;
             line-height: 1.7;
         }
         
@@ -198,7 +180,7 @@
         .image-section h3 {
             color: #ffffff;
             margin-bottom: 1rem;
-            font-size: 1.2rem;
+            font-size: 1.2em;
             font-weight: 500;
             border-bottom: 1px solid #667eea;
             padding-bottom: 0.5rem;
@@ -228,6 +210,11 @@
             padding: 2rem;
         }
         
+        .image-placeholder p:last-child {
+            font-size: 0.85em;
+            margin-top: 0.5rem;
+        }
+        
         /* Details Section */
         .details-section {
             flex: 1;
@@ -250,7 +237,7 @@
         .metadata-section h3 {
             color: #ffffff;
             margin-bottom: 1rem;
-            font-size: 1.2rem;
+            font-size: 1.2em;
             font-weight: 500;
             border-bottom: 1px solid #667eea;
             padding-bottom: 0.5rem;
@@ -259,7 +246,6 @@
         .detail-item {
             display: flex;
             margin-bottom: 0.75rem;
-            font-size: 0.95rem;
         }
         
         .detail-label {
@@ -319,7 +305,7 @@
             background-color: transparent;
             color: #667eea;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.85em;
             transition: all 0.2s ease;
             text-transform: uppercase;
             font-weight: 500;
@@ -345,8 +331,27 @@
             border: 1px solid #667eea;
             padding: 0.25rem 0.75rem;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.8em;
             font-weight: 400;
+        }
+        
+        /* Font size responsive adjustments */
+        @media screen and (min-width: 400px) {
+            .font {
+                gap: 1.5rem;
+            }
+        }
+        
+        @media screen and (min-width: 768px) {
+            .font {
+                gap: 2rem;
+            }
+        }
+        
+        @media screen and (min-width: 992px) {
+            .font {
+                gap: 2rem;
+            }
         }
         
         /* Responsive Design */
@@ -430,7 +435,6 @@
         <h1>Zeus</h1>
     </header>
     
-    <main>
     <div class="main-wrapper">
         <!-- First Row -->
         <div class="first-row">
@@ -504,7 +508,7 @@
                     <!-- Replace src with actual image path -->
                     <div class="image-placeholder">
                         <p>Image placeholder</p>
-                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Add reference image here</p>
+                        <p>Add reference image here</p>
                     </div>
                     <!-- <img src="images/zeus-reference.jpg" alt="Zeus Reference"> -->
                 </div>
@@ -571,7 +575,6 @@
             </div>
         </div>
     </div>
-    </main>
     
     <!-- Three.js Scripts - Local copies for offline use -->
     <!-- Three.js is Copyright © 2010-2025 three.js authors, MIT License -->
@@ -866,22 +869,32 @@
         // Initialize on load
         window.addEventListener('load', init);
         
-        // Font size controls
-        const increment = document.getElementById("up"),
-              decrement = document.getElementById("down"),
-              fsize = document.querySelector("main"),
-              step = 2;
-        
-        // Set initial font size
-        fsize.style.fontSize = "16px";
-        
-        increment.onclick = function() {
-            fsize.style.fontSize = parseInt(fsize.style.fontSize) + step + "px";
-        };
-        
-        decrement.onclick = function() {
-            fsize.style.fontSize = parseInt(fsize.style.fontSize) - step + "px";
-        };
+        // Font size controls - Simplified approach
+        document.addEventListener('DOMContentLoaded', function() {
+            const increment = document.getElementById("up");
+            const decrement = document.getElementById("down");
+            const html = document.documentElement;
+            const step = 2;
+            const minSize = 12;
+            const maxSize = 24;
+            
+            // Get current font size from HTML element
+            let currentSize = parseInt(window.getComputedStyle(html).fontSize);
+            
+            increment.onclick = function() {
+                if (currentSize < maxSize) {
+                    currentSize += step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+            
+            decrement.onclick = function() {
+                if (currentSize > minSize) {
+                    currentSize -= step;
+                    html.style.fontSize = currentSize + 'px';
+                }
+            };
+        });
     </script>
 </body>
 </html>

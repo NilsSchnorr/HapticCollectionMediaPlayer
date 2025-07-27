@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeus - Haptic Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        /* Header */
+        header {
+            background-color: #1a1a2e;
+            color: white;
+            padding: 1.5rem 0;
+            position: relative;
+            z-index: 100;
+        }
+        
+        header h1 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        
+        /* Main Container */
+        .main-wrapper {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #0a0a0a;
+        }
+        
+        /* First Row Container */
+        .first-row {
+            display: flex;
+            height: 600px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Content Section (Left) */
+        .content-section {
+            flex: 1;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+            overflow-y: auto;
+            max-width: 600px;
+        }
+        
+        .content-section h2 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 500;
+            border-bottom: 1px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .content-section h3 {
+            color: #ffffff;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .content-section p {
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+            text-align: justify;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        
+        .info-box {
+            background-color: #0a0a0a;
+            border: 1px solid #667eea;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        
+        .info-box strong {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        /* Model Section (Right) */
+        .model-section {
+            flex: 1.5;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Second Row Container */
+        .second-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Image Section */
+        .image-section {
+            flex: 1;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 1.5rem;
+            max-width: 600px;
+        }
+        
+        .image-section h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            border-bottom: 1px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .image-container {
+            width: 100%;
+            background-color: #0a0a0a;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
+        }
+        
+        .image-placeholder {
+            color: #667eea;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        /* Details Section */
+        .details-section {
+            flex: 1.5;
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+        
+        .details-section h3 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+            border-bottom: 1px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+        
+        .detail-label {
+            color: #667eea;
+            font-weight: 500;
+            min-width: 150px;
+            flex-shrink: 0;
+        }
+        
+        .detail-value {
+            color: #e0e0e0;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Model Controls */
+        .model-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1a1a2e;
+            padding: 0.75rem;
+            border-radius: 4px;
+            display: flex;
+            gap: 0.75rem;
+            border: 1px solid #2a2a3e;
+        }
+        
+        .control-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            background-color: transparent;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+        }
+        
+        .control-btn:hover {
+            background-color: #667eea;
+            color: #ffffff;
+        }
+        
+        /* Metadata Tags */
+        .metadata-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .tag {
+            background-color: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 400;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .first-row, .second-row {
+                flex-direction: column;
+            }
+            
+            .first-row {
+                height: auto;
+            }
+            
+            .content-section, .image-section {
+                max-width: 100%;
+            }
+            
+            .model-section {
+                height: 500px;
+            }
+            
+            .detail-item {
+                flex-direction: column;
+            }
+            
+            .detail-label {
+                margin-bottom: 0.25rem;
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8896ea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Zeus</h1>
+    </header>
+    
+    <div class="main-wrapper">
+        <!-- First Row -->
+        <div class="first-row">
+            <!-- Content Section -->
+            <div class="content-section">
+                <h2>King of the Gods</h2>
+                
+                <p>
+                    Zeus is the sky and thunder god in ancient Greek religion, who rules as king of the gods of Mount Olympus. 
+                    His name is cognate with the first element of his Roman equivalent Jupiter. His mythology and powers are 
+                    similar, though not identical, to those of Indo-European deities such as Jupiter, Perkūnas, Perun, Indra, 
+                    Dyaus and Thor.
+                </p>
+                
+                <div class="info-box">
+                    <strong>Domain:</strong> Sky, Thunder, Justice<br>
+                    <strong>Symbol:</strong> Thunderbolt, Eagle, Oak<br>
+                    <strong>Roman Name:</strong> Jupiter<br>
+                    <strong>Parents:</strong> Cronus and Rhea
+                </div>
+                
+                <h3>Powers and Abilities</h3>
+                <p>
+                    Zeus is the most powerful of all the Olympian gods. He wields the thunderbolt, a weapon of incredible 
+                    destructive force. As king of the gods, he maintains order and justice both in the divine realm and 
+                    among mortals. His powers include control over the weather, particularly storms and lightning.
+                </p>
+                
+                <h3>Mythology</h3>
+                <p>
+                    Zeus was the youngest child of the Titans Cronus and Rhea. Cronus, fearing a prophecy that one of his 
+                    children would overthrow him, swallowed each of his children as they were born. Rhea managed to save 
+                    Zeus by giving Cronus a stone wrapped in swaddling clothes instead. Zeus was raised in secret and 
+                    eventually fulfilled the prophecy, forcing Cronus to regurgitate his siblings and leading the Olympians 
+                    in a great war against the Titans.
+                </p>
+                
+                <div class="metadata-tags">
+                    <span class="tag">Greek Mythology</span>
+                    <span class="tag">Olympian</span>
+                    <span class="tag">Thunder God</span>
+                    <span class="tag">King of Gods</span>
+                </div>
+            </div>
+            
+            <!-- Model Section -->
+            <div class="model-section">
+                <div id="canvas-container"></div>
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>Loading 3D Model...</p>
+                </div>
+                
+                <!-- Model Controls -->
+                <div class="model-controls" style="display: none;" id="modelControls">
+                    <button class="control-btn" onclick="resetCamera()">Reset View</button>
+                    <button class="control-btn" onclick="toggleRotation()">Toggle Rotation</button>
+                    <button class="control-btn" onclick="toggleWireframe()">Wireframe</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Second Row -->
+        <div class="second-row">
+            <!-- Image Section -->
+            <div class="image-section">
+                <h3>Visual Reference</h3>
+                <div class="image-container">
+                    <!-- Replace src with actual image path -->
+                    <div class="image-placeholder">
+                        <p>Image placeholder</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Add reference image here</p>
+                    </div>
+                    <!-- <img src="images/zeus-reference.jpg" alt="Zeus Reference"> -->
+                </div>
+            </div>
+            
+            <!-- Details Section -->
+            <div class="details-section">
+                <h3>Object Information</h3>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Dating:</span>
+                    <span class="detail-value">Classical Period, 5th century BCE</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Origin:</span>
+                    <span class="detail-value">Ancient Greece, possibly Athens</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Material:</span>
+                    <span class="detail-value">Marble, Pentelic</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Dimensions:</span>
+                    <span class="detail-value">Height: 2.13m, Width: 0.98m</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Collection:</span>
+                    <span class="detail-value">Haptic Collection</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Inventory Number:</span>
+                    <span class="detail-value">HC-2024-0042</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Acquisition:</span>
+                    <span class="detail-value">2024, Private donation</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Conservation Status:</span>
+                    <span class="detail-value">Excellent condition</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Display Location:</span>
+                    <span class="detail-value">Gallery 3, Section A</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Three.js Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let model;
+        let isRotating = true;
+        let mixer;
+        const clock = new THREE.Clock();
+        
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Create camera
+            const container = document.getElementById('canvas-container');
+            camera = new THREE.PerspectiveCamera(
+                45,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+            
+            // Add lights - enhanced for better model visibility
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // Add subtle purple accent light
+            const accentLight = new THREE.PointLight(0x667eea, 0.4, 100);
+            accentLight.position.set(-5, 5, 5);
+            scene.add(accentLight);
+            
+            // Add a fill light to brighten shadows
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            fillLight.position.set(-10, 5, -5);
+            scene.add(fillLight);
+            
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 1;
+            controls.maxDistance = 20;
+            controls.maxPolarAngle = Math.PI / 2;
+            
+            // Add ground plane
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1a1a2e,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Load model
+            loadModel();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start animation
+            animate();
+        }
+        
+        function loadModel() {
+            const loader = new THREE.GLTFLoader();
+            
+            // Model path - adjust if needed based on your server setup
+            const modelPath = 'models/smallerzeus.gltf';
+            console.log('Attempting to load model from:', modelPath);
+            console.log('Current page URL:', window.location.href);
+            console.log('Expected model URL:', new URL(modelPath, window.location.href).href);
+            
+            // Set up loading manager for better debugging
+            const loadingManager = new THREE.LoadingManager();
+            loadingManager.onStart = function(url, itemsLoaded, itemsTotal) {
+                console.log('Started loading file: ' + url);
+            };
+            loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+                console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+            };
+            loadingManager.onError = function(url) {
+                console.error('Error loading file: ' + url);
+            };
+            
+            const loaderWithManager = new THREE.GLTFLoader(loadingManager);
+            
+            loaderWithManager.load(
+                modelPath,
+                function (gltf) {
+                    console.log('Model loaded successfully:', gltf);
+                    model = gltf.scene;
+                    
+                    // Log mesh information
+                    let meshCount = 0;
+                    let vertexCount = 0;
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            meshCount++;
+                            if (child.geometry) {
+                                const pos = child.geometry.attributes.position;
+                                if (pos) vertexCount += pos.count;
+                            }
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            // Ensure materials are properly lit
+                            if (child.material) {
+                                child.material.needsUpdate = true;
+                                // Make sure material is double-sided for better visibility
+                                child.material.side = THREE.DoubleSide;
+                            }
+                        }
+                    });
+                    console.log(`Model contains ${meshCount} meshes with ${vertexCount} vertices total`);
+                    
+                    // Center and scale model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    model.position.sub(center);
+                    model.position.y = 0; // Ensure model sits on ground
+                    
+                    const size = box.getSize(new THREE.Vector3());
+                    console.log('Model dimensions:', size);
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 4 / maxDim; // Slightly larger scale
+                    model.scale.setScalar(scale);
+                    
+                    scene.add(model);
+                    
+                    // Set up animations if any
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        console.log('Model has animations:', gltf.animations.length);
+                        mixer = new THREE.AnimationMixer(model);
+                        const action = mixer.clipAction(gltf.animations[0]);
+                        action.play();
+                    }
+                    
+                    // Adjust camera to frame the model better
+                    const distance = maxDim * 2;
+                    camera.position.set(distance * 0.5, distance * 0.5, distance);
+                    camera.lookAt(0, 0, 0);
+                    controls.target.set(0, 0, 0);
+                    controls.update();
+                    
+                    // Hide loading spinner and show controls
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    document.getElementById('modelControls').style.display = 'flex';
+                },
+                function (xhr) {
+                    if (xhr.total > 0) {
+                        const percentComplete = (xhr.loaded / xhr.total * 100).toFixed(2);
+                        console.log('Loading progress:', percentComplete + '%');
+                        const loadingText = document.querySelector('.loading-spinner p');
+                        if (loadingText) {
+                            loadingText.textContent = `Loading 3D Model... ${percentComplete}%`;
+                        }
+                    }
+                },
+                function (error) {
+                    console.error('=== MODEL LOADING ERROR ===');
+                    console.error('Error details:', error);
+                    console.error('Error message:', error.message);
+                    console.error('Failed to load from path:', modelPath);
+                    console.error('Make sure:');
+                    console.error('1. You are serving files through a web server (not file://)');
+                    console.error('2. Both zeusmaus.gltf and zeusmaus.bin are in the models/ folder');
+                    console.error('3. The web server can serve .gltf and .bin files');
+                    console.error('==========================');
+                    
+                    // Show error message to user
+                    const loadingText = document.querySelector('.loading-spinner p');
+                    if (loadingText) {
+                        loadingText.innerHTML = 'Failed to load 3D model<br><small>Check console for details</small>';
+                        loadingText.style.color = '#ff6666';
+                    }
+                    
+                    // Create placeholder after a delay
+                    setTimeout(() => {
+                        createPlaceholderModel();
+                    }, 2000);
+                }
+            );
+        }
+        
+        function createPlaceholderModel() {
+            console.warn('Creating placeholder model - actual model failed to load');
+            
+            // Update loading text to show placeholder
+            const loadingText = document.querySelector('.loading-spinner p');
+            if (loadingText) {
+                loadingText.textContent = 'Showing placeholder cube';
+            }
+            
+            // Create a simple placeholder cube
+            const geometry = new THREE.BoxGeometry(2, 2, 2);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x667eea,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            
+            model = new THREE.Mesh(geometry, material);
+            model.castShadow = true;
+            model.receiveShadow = true;
+            scene.add(model);
+            
+            // Hide loading spinner and show controls
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('modelControls').style.display = 'flex';
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update controls
+            controls.update();
+            
+            // Rotate model
+            if (model && isRotating) {
+                model.rotation.y += 0.005;
+            }
+            
+            // Update animations
+            if (mixer) {
+                mixer.update(clock.getDelta());
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        // Control functions
+        function resetCamera() {
+            camera.position.set(2, 2, 5);
+            camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+        
+        function toggleRotation() {
+            isRotating = !isRotating;
+        }
+        
+        function toggleWireframe() {
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

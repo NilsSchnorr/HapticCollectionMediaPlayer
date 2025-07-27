@@ -2,6 +2,10 @@
 
 This directory contains HTML templates for displaying objects with 3D models when NFC chips are detected.
 
+## Important: Offline Setup
+
+For the 3D viewer to work offline (without internet connection), you need to download the Three.js library files. See `js/README.md` for download instructions.
+
 ## Files
 
 1. **zeus.html** - A complete example page for the Zeus object with two-row layout

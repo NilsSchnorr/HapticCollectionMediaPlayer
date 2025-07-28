@@ -266,11 +266,11 @@ This project is licensed under a Modified MIT License (Non-Commercial) - see the
 
 Built with:
 - Flask web framework
-- PN532 NFC library by Waveshare/Yehui
+- PN532 NFC library by Waveshare/Yehui ([Wiki](https://www.waveshare.com/wiki/PN532_NFC_HAT))
+- Threejs-gltf-import from dgreenheck (https://github.com/dgreenheck/threejs-gltf-import/tree/main)
 
 **Special thanks to:**
-- Waveshare for the PN532 NFC HAT library ([Wiki](https://www.waveshare.com/wiki/PN532_NFC_HAT))
-- Threejs-gltf-import from dgreenheck (https://github.com/dgreenheck/threejs-gltf-import/tree/main)
+- Jürgen Schnorr for providing us with the required hardware and helping us with the first iteration of code
 
 ---
 

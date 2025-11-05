@@ -81,111 +81,63 @@
             background-color: #0a0a0a;
         }
         
-        /* Top Information Row - Image Left (1/3), Text Right (2/3) */
-        .top-info-row {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 2rem;
+        /* Hero Section */
+        .hero-section {
             background-color: #1a1a2e;
             border: 1px solid #2a2a3e;
             border-radius: 4px;
-            padding: 2rem;
-            min-height: 300px;
-        }
-        
-        .info-image {
-            flex: 0 0 33.333%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .info-image-container {
-            width: 100%;
-            background-color: #0a0a0a;
-            border: 1px solid #2a2a3e;
-            border-radius: 4px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            aspect-ratio: 1;
-            max-width: 350px;
-        }
-        
-        .info-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        
-        .image-placeholder {
-            color: #667eea;
+            padding: 3rem;
+            margin-bottom: 2rem;
             text-align: center;
-            padding: 2rem;
+            position: relative;
+            overflow: hidden;
         }
         
-        .info-text {
-            flex: 0 0 66.666%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding-left: 1rem;
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
+            pointer-events: none;
         }
         
-        .info-text h2 {
+        .hero-section h2 {
             color: #ffffff;
-            margin-bottom: 1.5rem;
-            font-size: 2em;
+            font-size: 2.5em;
             font-weight: 500;
-            border-bottom: 1px solid #667eea;
-            padding-bottom: 0.5rem;
-        }
-        
-        .info-text p {
-            color: #e0e0e0;
             margin-bottom: 1rem;
-            line-height: 1.8;
-            text-align: justify;
+            position: relative;
         }
         
-        .quick-facts {
-            display: flex;
-            gap: 2rem;
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .fact-item {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .fact-label {
+        .hero-subtitle {
             color: #667eea;
-            font-weight: 500;
-            font-size: 0.9em;
+            font-size: 1.2em;
+            margin-bottom: 1.5rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
         }
         
-        .fact-value {
-            color: #ffffff;
+        .hero-description {
+            color: #e0e0e0;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
             font-size: 1.1em;
-            margin-top: 0.25rem;
         }
         
-        /* Content Row */
-        .content-row {
+        /* Model and Info Section */
+        .model-info-section {
             display: flex;
             gap: 2rem;
             margin-bottom: 2rem;
         }
         
-        /* Model Section */
-        .model-section {
-            flex: 1.5;
+        /* Model Container */
+        .model-container {
+            flex: 2;
             background-color: #1a1a2e;
             border: 1px solid #2a2a3e;
             border-radius: 4px;
@@ -199,133 +151,243 @@
             height: 100%;
         }
         
-        /* Details Panel */
-        .details-panel {
+        /* Quick Info Panel */
+        .quick-info-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
         }
         
-        .detail-card {
+        .info-card {
             background-color: #1a1a2e;
             border: 1px solid #2a2a3e;
             border-radius: 4px;
             padding: 1.5rem;
-            transition: border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
         
-        .detail-card:hover {
+        .info-card:hover {
             border-color: #667eea;
+            transform: translateY(-2px);
         }
         
-        .detail-card h3 {
-            color: #ffffff;
-            margin-bottom: 1rem;
-            font-size: 1.2em;
-            font-weight: 500;
+        .info-card-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
         
-        .detail-card h3::before {
-            content: '';
-            width: 4px;
-            height: 1.2em;
-            background-color: #667eea;
-            border-radius: 2px;
-        }
-        
-        .detail-item {
+        .info-card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
             display: flex;
-            margin-bottom: 0.5rem;
-            padding-left: 1rem;
-        }
-        
-        .detail-label {
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
             color: #667eea;
-            font-weight: 500;
-            min-width: 120px;
-            flex-shrink: 0;
-            font-size: 0.9em;
+            font-size: 1.2em;
         }
         
-        .detail-value {
+        .info-card h3 {
+            color: #ffffff;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .info-card-content {
+            color: #e0e0e0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        /* Gallery Section */
+        .gallery-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-header h3 {
+            color: #ffffff;
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+        
+        .section-header-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #667eea, transparent);
+            margin-left: 2rem;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .gallery-card {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gallery-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            background-color: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .gallery-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .gallery-card:hover .gallery-image img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-content {
+            padding: 1.5rem;
+        }
+        
+        .gallery-title {
+            color: #ffffff;
+            font-size: 1.1em;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .gallery-description {
             color: #e0e0e0;
             font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 1rem;
         }
         
-        /* Additional Information Section */
-        .additional-info {
+        .gallery-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #2a2a3e;
+        }
+        
+        .gallery-meta-item {
+            color: #667eea;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-block {
             background-color: #1a1a2e;
             border: 1px solid #2a2a3e;
             border-radius: 4px;
             padding: 2rem;
-            margin-bottom: 2rem;
         }
         
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-        
-        .info-block h4 {
+        .detail-block h4 {
             color: #ffffff;
-            margin-bottom: 1rem;
-            font-size: 1.1em;
-            font-weight: 500;
+            font-size: 1.3em;
+            margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid #2a2a3e;
+            border-bottom: 2px solid #667eea;
         }
         
-        .info-block p {
-            color: #e0e0e0;
-            line-height: 1.7;
-        }
-        
-        .info-block ul {
+        .detail-list {
             list-style: none;
-            color: #e0e0e0;
         }
         
-        .info-block ul li {
-            padding-left: 1.5rem;
-            position: relative;
-            margin-bottom: 0.5rem;
+        .detail-list li {
+            display: flex;
+            margin-bottom: 1rem;
+            align-items: flex-start;
         }
         
-        .info-block ul li::before {
-            content: '▸';
-            position: absolute;
-            left: 0;
+        .detail-list-label {
             color: #667eea;
+            font-weight: 500;
+            min-width: 140px;
+            flex-shrink: 0;
         }
         
-        /* Tags */
-        .tag-container {
+        .detail-list-value {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        /* Tags Section */
+        .tags-section {
+            background-color: #1a1a2e;
+            border: 1px solid #2a2a3e;
+            border-radius: 4px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .tags-section h4 {
+            color: #ffffff;
+            font-size: 1.2em;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tags-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: 0.75rem;
+            justify-content: center;
         }
         
         .tag {
             background-color: transparent;
             color: #667eea;
             border: 1px solid #667eea;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.8em;
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.9em;
             font-weight: 400;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
         
         .tag:hover {
             background-color: #667eea;
             color: #ffffff;
+            transform: scale(1.05);
         }
         
         /* Loading Spinner */
@@ -387,34 +449,52 @@
         }
         
         /* Responsive Design */
-        @media (max-width: 1024px) {
-            .top-info-row {
+        @media (max-width: 1200px) {
+            .model-info-section {
                 flex-direction: column;
             }
             
-            .info-image {
-                flex: 1;
-                max-width: 100%;
-            }
-            
-            .info-text {
-                flex: 1;
-                padding-left: 0;
-            }
-            
-            .content-row {
-                flex-direction: column;
-            }
-            
-            .model-section {
+            .model-container {
                 height: 500px;
             }
             
-            .detail-item {
+            .quick-info-panel {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .info-card {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-width: 250px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 1.5rem;
+            }
+            
+            .hero-section h2 {
+                font-size: 2em;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-card {
+                flex: 1 1 100%;
+            }
+            
+            .detail-list li {
                 flex-direction: column;
             }
             
-            .detail-label {
+            .detail-list-label {
                 margin-bottom: 0.25rem;
             }
             
@@ -452,53 +532,23 @@
             <button id="down">-</button>
             <button id="up">+</button>
         </div>
-        <h1>Portraitbüste des Augustus</h1>
+        <h1>Augustus</h1>
     </header>
     
     <div class="main-wrapper">
-        <!-- Top Information Row -->
-        <div class="top-info-row">
-            <div class="info-image">
-                <div class="info-image-container">
-                    <!-- Replace src with actual image path -->
-                    <img src="images/Augustus_01.jpeg" alt="Abbildung Augustus">
-                    <!-- Or use placeholder:
-                    <div class="image-placeholder">
-                        <p>Main Image</p>
-                        <p>{{IMAGE_DIMENSIONS}}</p>
-                    </div>
-                    -->
-                </div>
-            </div>
-            
-            <div class="info-text">
-                <h2>Portraitbüste des <a href="hyper_Augustus.html">Augustus</a>, sogenannter Augustus Bevilacqua</h2>
-                <p><br>Diese Portaitbüste des Augustus, der sogenannte Typ Augustus Bevilacqua, zeigt den noch jungen römischen Kaiser bekrönt mit einem Eichelkranz. Der Kopf des Augustus ist nach rechts gewandt und bleibt trotz seiner feinen Ausarbeitung und hohen Plastizität reglos und teils fast schematisch. Dennoch muss der hohe Detailgrad der Bildhauerei hervorgehoben werden, welcher sich vor allem in den fein angedeuteten Falten rund um die Nase oder die detailliert dargestellten Schläfenadern andeutet. Ob es sich hierbei um den Wunsch einer möglichst realistischen Darstellung des Kaisers oder aber um ein Qualitätsindikator des Handwerkers handelt, kann nicht genau bestimmt werden. </br>
-<br>Für die Portraitforschung von besonderer Relevanz ist die Darstellung der kaiserlichen Frisur. Das gezeigte Portrait folgt in der Frisur dem sogenannten Prima-Porta Typus, benannt nach der namensgebenden Panzerstatue des Kaisers, welche sich heute in den Vatikanischen Museen befindet. </br>
-Ob das Portait noch zu Lebzeiten des Kaisers (63 v. Chr. - 14 n. Chr.) kann nicht abschließend geklärt werden. Die einzelnen Elemente der Darstellung können gut mit spätaugusteischen oder auch posthum (nach dem Tod) angefertigten Kaiserbildern vergleichen werden, dennoch scheint es sich um eine ältere Vorlage zu handeln, die den noch jungen Kaiser kurz nach der Erhebung zum Augustus (der Erhabene) um 27 v. Chr. zeigt. </p>
-                <p>Die aus feinkristallinem, parischen Marmor gefertigte Vorlage unseres Gipsabgusses befindet sich seit 1815 in der Münchner Glypothek und besticht dort vor allem durch ihren außergewöhnlichen Erhaltungszustand und die nach wie vor hervorragende Oberfläche des Steins. Bevor die Büste nach München kam, befand sie sich in der Sammlung im römischen Palazzo Bevilacqua, woher auch der Rufname stammt. </p>
-                
-                <div class="quick-facts">
-                    <div class="fact-item">
-                        <div class="fact-label">Datierung</div>
-                        <div class="fact-value">Spätaugusteisch</div>
-                    </div>
-                    <div class="fact-item">
-                        <div class="fact-label">Herkunft</div>
-                        <div class="fact-value">Rom</div>
-                    </div>
-                    <div class="fact-item">
-                        <div class="fact-label">Material</div>
-                        <div class="fact-value">Parischer Marmor</div>
-                    </div>
-                </div>
-            </div>
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h2>Augustus</h2>
+           
+            <p class="hero-description">Augustus (* 23. September 63 v. Chr. als Gaius Octavius in Rom; † 19. August 14 n. Chr. in Nola bei Neapel) war der erste römische Kaiser.
+
+Der Großneffe und Haupterbe Gaius Iulius Caesars gewann die Bürgerkriege, die auf dessen Ermordung im Jahr 44 v. Chr. folgten, und war von 31 v. Chr. bis zu seinem Tod faktisch Alleinherrscher des Römischen Reiches. Unter der Devise der vorgeblichen Wiederherstellung der Republik – restitutio rei publicae – betrieb er in Wirklichkeit deren dauerhafte Umwandlung in den quasi-monarchischen Prinzipat, der rund 300 Jahre lang bestand, bis zur Reichskrise des 3. Jahrhunderts. Damit setzte er dem Jahrhundert der Römischen Bürgerkriege ein Ende und begründete die Julisch-Claudische Kaiserdynastie. Seine Herrschaft, nach außen durch zahlreiche Expansionskriege geprägt, mündete im Inneren in eine lang anhaltende Konsolidierungs- und Friedensphase, die als Pax Augusta verklärt wurde. </p>
         </div>
         
-        <!-- Content Row -->
-        <div class="content-row">
-            <!-- Model Section -->
-            <div class="model-section">
+        <!-- Model and Info Section -->
+        <div class="model-info-section">
+            <!-- 3D Model Container -->
+            <div class="model-container">
                 <div id="canvas-container"></div>
                 
                 <!-- Loading Spinner -->
@@ -515,93 +565,32 @@ Ob das Portait noch zu Lebzeiten des Kaisers (63 v. Chr. - 14 n. Chr.) kann nich
                 </div>
             </div>
             
-            <!-- Details Panel -->
-            <div class="details-panel">
-                <div class="detail-card">
-                    <h3>Details</h3>
-                    <div class="detail-item">
-                        <span class="detail-label">Maße</span>
-                        <span class="detail-value">Höhe: 55cm, Breite: 31cm, Tiefe: 23cm</span>
+            <!-- Quick Info Panel -->
+            <div class="quick-info-panel">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="info-card-icon">📅</div>
+                        <h3>Lebensdaten</h3>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Gewicht:</span>
-                        <span class="detail-value">6kg (Abguss)</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Zustand:</span>
-                        <span class="detail-value">sehr gut</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Erwerb:</span>
-                        <span class="detail-value">1988</span>
+                    <div class="info-card-content">
+                        <strong>Geboren:</strong> 23. September 63 v.Chr.<br>
+                        <strong>Gestorben:</strong> 19. August 14 n.Chr.<br>
+                        <strong>Herkunft:</strong> römisch
                     </div>
                 </div>
                 
-                <div class="detail-card">
-                    <h3>Sammlungsinformationen</h3>
-                    <div class="detail-item">
-                        <span class="detail-label">Inventarnummer:</span>
-                        <span class="detail-value">067, ehemals 104</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Sammlung:</span>
-                        <span class="detail-value">Abgusssammlung Universität Saarbrücken</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Arachne-ID:</span>
-                        <span class="detail-value">1219608</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Standort:</span>
-                        <span class="detail-value">Sammlungsraum B3/1</span>
-                    </div>
-                </div>
                 
-                <div class="detail-card">
-                    <h3>Tags</h3>
-                    <div class="tag-container">
-                        <span class="tag">Augustus</span>
-                        <span class="tag">Portrait</span>
-                        <span class="tag">Rom</span>
-                        <span class="tag">Kaiser</span>
-                        <span class="tag">Abguss</span>
-                    </div>
-                </div>
-            </div>
-        </div>
         
-        <!-- Additional Information -->
-        <div class="additional-info">
-            <h3 style="color: #ffffff; font-size: 1.5em; margin-bottom: 0.5rem;">Zusatzinformationen</h3>
-            
-            <div class="info-grid">
-                <div class="info-block">
-                    <h4>Historischer Kontext</h4>
-                    <p> <br>Portaitbüsten spielen in der Propaganda des römischen Kaiserreichs eine außerordentlich wichtige Rolle. Sie dienen nicht nur als Abbild des Herrschers, sondern werden auch genutzt, um in entlegenen Regionen eine Verbindung zur Zentralmach in Rom aufrecht und lebendig zu halten. Dies ist vor allem dann wichtig, wenn der Kaiser gewechselt hat oder eine neueroberte Provinz sich in das Reich integrieren musste. </br> 
-                        <br> Die Portraits verfolgen dabei keineswegs den Anspruch einer korrekten Darstellung des Herrschers, sondern stellen diesen oft idelaisiert und einer gewünschten Aussage folgend dar. So sind Anleihen etwa an Bildnisse von Alexander dem Großen gerade in der frühen Kaiserzeit ein gerne genutztes Mittel, um die Ansprüche Roms als neue Weltmacht darzustellen und den Kaiser in die Nachfolge Alexanders zu stellen </br></p>
-                </div>
-                
-                <div class="info-block">
-                    <h4>Referenzen (Auswahl)</h4>
-                    <p> <br> D. Boschung, Die Bildnisse des Augustus, Das römische Herrscherbild 1,2 (Berlin 1993) </br>
-                        <br> M. Pfanner, Über das Herstellen von Porträs. Ein Beistrag zur Rationalisierungsmaßnahmen und Produktionsmechanismen von Massenware im späten Hellenismus und in der römischen Kaiserzeit, JdI 104, 1989 </br>
-                        <br> U. Hausmann, Zur Typologie und Ideologie des Augustusporträts, ANRW II 12,2 (Berlin 1981) </br>
-                    </p>
-                </div>
-                
-                <div class="info-block">
-                    <h4>Provinienz des Original</h4>
-                    <ul>
-                        <li> spätestens 1589: Verona, Sammlung Graf Bevilacqua</li>
-                        <li> 1797 - 1815: Paris, Louvre (?)</li>
-                        <li> 1815 - heute: München, Glyptothek</li>
-                        </ul>
-                </div>
-                
-                <div class="info-block">
-                    <h4>Bearbeitung</h4>
-                    <p>L.Latzel (10.2025)</p>
-                </div>
+       
+        
+        <!-- Tags Section -->
+        <div class="tags-section">
+            <h4>Related Topics & Keywords</h4>
+            <div class="tags-container">
+                <span class="tag">Kaiser</span>
+                <span class="tag">Augustus</span>
+                <span class="tag">Rom</span>
+               
             </div>
         </div>
     </div>
@@ -613,7 +602,7 @@ Ob das Portait noch zu Lebzeiten des Kaisers (63 v. Chr. - 14 n. Chr.) kann nich
     
     <script>
         // Configuration
-        const MODEL_PATH = 'models/Augustus_reduced.gltf';
+        const MODEL_PATH = 'models/{{MODEL_FILENAME}}';
         
         // Scene setup
         let scene, camera, renderer, controls;

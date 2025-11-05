@@ -19,18 +19,13 @@
 			"rotation":[
 				0.0128483222797513,
 				-0.23604172468185425,
-				0.005398865789175034,
+				0.005398865323513746,
 				0.9716429710388184
 			],
 			"scale":[
-				0.265006422996521,
-				0.2650064527988434,
-				0.265006422996521
-			],
-			"translation":[
-				3.1149206161499023,
-				124.7022933959961,
-				-6.3842926025390625
+				0.054349422454833984,
+				0.05434942618012428,
+				0.054349422454833984
 			]
 		}
 	],
@@ -39,6 +34,9 @@
 			"doubleSided":true,
 			"name":"Material.001",
 			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":0
+				},
 				"metallicFactor":0,
 				"roughnessFactor":0.5
 			}
@@ -56,141 +54,94 @@
 					},
 					"indices":3,
 					"material":0
-				},
-				{
-					"attributes":{
-						"POSITION":4,
-						"NORMAL":5,
-						"TEXCOORD_0":6
-					},
-					"indices":7
 				}
 			]
+		}
+	],
+	"textures":[
+		{
+			"sampler":0,
+			"source":0
+		}
+	],
+	"images":[
+		{
+			"mimeType":"image/png",
+			"name":"Fast fusion 1 Base Color",
+			"uri":"Fast%20fusion%201%20Base%20Color.png"
 		}
 	],
 	"accessors":[
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":464356,
+			"count":190511,
 			"max":[
-				115.47560119628906,
-				742.2861328125,
-				176.85733032226562
+				0.43842923641204834,
+				3.5975630283355713,
+				0.4265134036540985
 			],
 			"min":[
-				-145.56576538085938,
-				-463.9378356933594,
-				-175.09266662597656
+				-0.44704127311706543,
+				0.0418696403503418,
+				-0.5061507821083069
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":464356,
+			"count":190511,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":464356,
+			"count":190511,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5125,
-			"count":464949,
-			"type":"SCALAR"
-		},
-		{
-			"bufferView":4,
-			"componentType":5126,
-			"count":24,
-			"max":[
-				158.37887573242188,
-				-445.8766174316406,
-				163.99452209472656
-			],
-			"min":[
-				-175.75283813476562,
-				-599.5477294921875,
-				-173.32814025878906
-			],
-			"type":"VEC3"
-		},
-		{
-			"bufferView":5,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC3"
-		},
-		{
-			"bufferView":6,
-			"componentType":5126,
-			"count":24,
-			"type":"VEC2"
-		},
-		{
-			"bufferView":7,
-			"componentType":5123,
-			"count":36,
+			"count":191787,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":5572272,
+			"byteLength":2286132,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5572272,
-			"byteOffset":5572272,
+			"byteLength":2286132,
+			"byteOffset":2286132,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":3714848,
-			"byteOffset":11144544,
+			"byteLength":1524088,
+			"byteOffset":4572264,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":1859796,
-			"byteOffset":14859392,
+			"byteLength":767148,
+			"byteOffset":6096352,
 			"target":34963
-		},
+		}
+	],
+	"samplers":[
 		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":16719188,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":288,
-			"byteOffset":16719476,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":192,
-			"byteOffset":16719764,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":72,
-			"byteOffset":16719956,
-			"target":34963
+			"magFilter":9729,
+			"minFilter":9987
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":16720028,
+			"byteLength":6863500,
 			"uri":"PeploskoreBasis3.bin"
 		}
 	]

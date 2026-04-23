@@ -10,6 +10,8 @@ import sys
 import time
 from datetime import datetime
 import threading
+import signal
+import atexit
 
 # Add the python directory to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
@@ -19,12 +21,65 @@ nfc_reader = None
 nfc_available = False
 current_uid = None
 current_html = None
+is_reading = False
+_cleanup_done = False
+
+def cleanup_nfc():
+    """Clean up NFC reader, serial port, and GPIO on exit."""
+    global nfc_reader, nfc_available, is_reading, _cleanup_done
+    if _cleanup_done:
+        return
+    _cleanup_done = True
+
+    print("Cleaning up NFC reader...")
+    is_reading = False
+
+    if nfc_reader is not None:
+        try:
+            if hasattr(nfc_reader, '_uart') and nfc_reader._uart is not None:
+                if nfc_reader._uart.is_open:
+                    nfc_reader._uart.close()
+                    print("Serial port closed.")
+        except Exception as e:
+            print(f"Error closing serial port: {e}")
+        nfc_reader = None
+        nfc_available = False
+
+    try:
+        import RPi.GPIO as GPIO
+        GPIO.cleanup()
+        print("GPIO cleaned up.")
+    except Exception:
+        pass
+
+def signal_handler(signum, frame):
+    """Handle termination signals for clean shutdown."""
+    print(f"\nReceived signal {signum}, shutting down...")
+    cleanup_nfc()
+    sys.exit(0)
+
+# Register cleanup handlers
+atexit.register(cleanup_nfc)
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 print("Initializing NFC Display System...")
 try:
     import RPi.GPIO as GPIO
     from pn532 import *
-    
+
+    # Force-close any leftover serial connection from a previous run
+    import serial
+    try:
+        _tmp_serial = serial.Serial('/dev/ttyS0', 115200)
+        _tmp_serial.reset_input_buffer()
+        _tmp_serial.reset_output_buffer()
+        _tmp_serial.close()
+        time.sleep(0.1)
+        print("Cleared previous serial connection.")
+    except Exception:
+        pass
+
     nfc_reader = PN532_UART(debug=False, reset=20)
     ic, ver, rev, support = nfc_reader.get_firmware_version()
     print(f'Found PN532 with firmware version: {ver}.{rev}')
@@ -47,16 +102,17 @@ def load_mappings():
 
 # NFC reading thread
 def nfc_reader_thread():
-    global current_uid, current_html
+    global current_uid, current_html, is_reading
     
     if not nfc_available:
         return
     
     print("NFC monitoring started...")
+    is_reading = True
     mappings = load_mappings()
     last_reload = time.time()
     
-    while True:
+    while is_reading:
         try:
             # Reload mappings every 10 seconds
             if time.time() - last_reload > 10:
@@ -88,6 +144,8 @@ def nfc_reader_thread():
         except Exception as e:
             print(f"Error in NFC thread: {e}")
             time.sleep(1)
+    
+    print("NFC reader thread stopped.")
 
 # Main display page
 DISPLAY_HTML = '''

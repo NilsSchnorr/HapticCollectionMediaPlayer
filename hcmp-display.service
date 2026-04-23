@@ -1,0 +1,16 @@
+[Unit]
+Description=HCMP Display Backend (NFC reader + web server)
+After=network.target
+
+[Service]
+Type=simple
+User=@@USER@@
+WorkingDirectory=@@WORKDIR@@
+ExecStart=/usr/bin/python3 @@WORKDIR@@/nfc_display.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -155,6 +155,70 @@ This ensures the display stays on indefinitely, even across reboots.
 - **Alt + F4** - Close window
 - **Ctrl + C** - Stop from terminal
 
+### Autostart (Museum / Exhibition Mode)
+
+For unattended installations where the Pi should boot directly into display mode — for example in a museum where staff simply turn on the power each morning — you can set up autostart. This makes the HCMP launch automatically every time the Pi boots, with no keyboard or mouse interaction required.
+
+#### What It Does
+
+The autostart installer sets up two things:
+
+1. **A systemd service** that starts the NFC display backend (`nfc_display.py`) early in the boot process. This is the Python server that talks to the NFC reader and serves content on port 8080.
+2. **A desktop autostart entry** that opens Chromium in fullscreen kiosk mode once the graphical desktop is ready, pointed at `http://localhost:8080`. It also disables screen blanking at the X11 level.
+
+Additionally, it enables desktop auto-login and disables screen blanking via `raspi-config`.
+
+#### Installing Autostart
+
+```bash
+./install_autostart.sh
+```
+
+The script will ask for confirmation, then set everything up. At the end it offers to reboot so you can test it immediately.
+
+After a reboot, the boot sequence is:
+
+1. Pi powers on and boots the OS
+2. Auto-login to the desktop (no password prompt)
+3. systemd starts the NFC display backend
+4. Chromium opens in fullscreen kiosk mode
+5. The "Place an object on the reader" home screen appears
+
+No user interaction needed at any point.
+
+#### Making Changes While Autostart Is Active
+
+When the Pi boots into display mode and you need to make changes (edit mappings, update HTML files, etc.), you don't need to uninstall autostart. Just open a terminal and stop the service:
+
+```bash
+sudo systemctl stop hcmp-display
+```
+
+Then close Chromium (Alt+F4) and do your thing. When you're done, either reboot (autostart takes over) or restart manually:
+
+```bash
+sudo systemctl start hcmp-display
+```
+
+#### Removing Autostart
+
+To go back to normal boot behavior:
+
+```bash
+./uninstall_autostart.sh
+```
+
+This removes the systemd service and the Chromium autostart entry. It does not change auto-login or screen blanking settings — adjust those via `sudo raspi-config` if needed.
+
+#### Useful Commands
+
+```bash
+sudo systemctl stop hcmp-display      # Stop the display backend
+sudo systemctl start hcmp-display     # Start the display backend
+sudo systemctl status hcmp-display    # Check if it's running
+sudo journalctl -u hcmp-display -f    # View live logs
+```
+
 ## 🎨 Customization
 
 ### Home Screen Appearance
@@ -192,11 +256,16 @@ Shows what's running and port status.
 The display turning off is caused by Raspberry Pi OS screen blanking. Make sure you have disabled it:
 1. Run `sudo raspi-config` → **Display Options** → **Screen Blanking** → **No**
 2. Use `start_display.sh` (not `start_display_simple.sh`) — it includes `xset` and `setterm` commands that disable screen blanking at the X11 level.
+3. If using autostart, this is handled automatically by `install_autostart.sh`.
 
 ### NFC Not Detecting
 1. Check hardware connections
 2. Verify reader with: `cd python && python3 example_get_uid.py`
 3. Try `sudo` if permission errors
+4. If you recently closed the web server or another NFC script, the serial port may still be locked. Wait a few seconds and try again — the display script will attempt to flush the serial port on startup.
+
+### NFC Works in Web Server But Not in Display Mode
+This can happen if the web server (`nfc_web_server.py`) wasn't shut down cleanly, leaving the serial port or PN532 in a bad state. Both scripts now clean up on exit and flush the serial port on startup, but if the issue persists, a reboot will always resolve it.
 
 ### Port Already in Use
 - Management interface uses port 5000
@@ -205,6 +274,9 @@ The display turning off is caused by Raspberry Pi OS screen blanking. Make sure 
 
 ### View Logs
 ```bash
+# If running via autostart service
+sudo journalctl -u hcmp-display -f
+
 # If running in background
 tail -f nfc_player.log
 ```
@@ -214,22 +286,27 @@ tail -f nfc_player.log
 ```
 HapticCollectionMediaPlayer/
 ├── Core System
-│   ├── nfc_display.py         # Main display system
-│   ├── nfc_web_server.py      # Management interface
-│   └── web_interface/         # Web UI files
+│   ├── nfc_display.py            # Main display system
+│   ├── nfc_web_server.py         # Management interface
+│   └── web_interface/            # Web UI files
 │
 ├── Startup Scripts
-│   ├── start_display.sh       # Kiosk mode
-│   ├── start_display_simple.sh # Window mode
-│   ├── start_both.sh          # Management tools
-│   └── start_demo.sh          # Demo mode
+│   ├── start_display.sh          # Manual kiosk mode
+│   ├── start_display_simple.sh   # Manual window mode
+│   ├── start_both.sh             # Management tools
+│   └── start_demo.sh             # Demo mode
+│
+├── Autostart
+│   ├── install_autostart.sh      # Set up boot-to-display
+│   ├── uninstall_autostart.sh    # Remove autostart
+│   └── hcmp-display.service      # systemd service template
 │
 ├── Content & Data
-│   ├── html_content/          # Your HTML files
-│   └── nfc_mappings.json      # Saved mappings
+│   ├── html_content/             # Your HTML files
+│   └── nfc_mappings.json         # Saved mappings
 │
 └── Libraries
-    └── python/                # PN532 drivers
+    └── python/                   # PN532 drivers
 ```
 
 ## 🎯 Common Use Cases
@@ -238,7 +315,8 @@ HapticCollectionMediaPlayer/
 1. Create HTML pages for each exhibit
 2. Attach NFC tags to physical objects
 3. Map tags to relevant content
-4. Run in kiosk mode on exhibition screen
+4. Run `./install_autostart.sh` for hands-free operation
+5. Staff just need to turn on the power each day
 
 ### Interactive Art Installation
 1. Embed NFC chips in art pieces
@@ -260,6 +338,7 @@ HapticCollectionMediaPlayer/
 - **Use unique chips**: Each NFC chip needs a unique UID
 - **Hide the reader**: Can work through thin materials
 - **Disable screen blanking**: Run `sudo raspi-config` → Display Options → Screen Blanking → No (see [Disabling Screen Blanking](#disabling-screen-blanking-important-for-exhibitions))
+- **Museum setup**: Use `./install_autostart.sh` so the display starts automatically on power-on (see [Autostart](#autostart-museum--exhibition-mode))
 
 ## 🔒 Security Note
 

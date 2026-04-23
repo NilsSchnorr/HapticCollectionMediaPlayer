@@ -126,6 +126,17 @@ Opens in fullscreen kiosk mode (ESC to exit).
 ```
 Use buttons or keys 1-3 to simulate chips.
 
+#### Disabling Screen Blanking (Important for Exhibitions)
+
+By default, Raspberry Pi OS will blank the screen after a period of inactivity. Since the HCMP runs without keyboard or mouse input, the OS thinks it's idle and may turn off the display. The `start_display.sh` script already attempts to disable this via `xset` and `setterm` commands, but you should **also** disable it at the OS level to be safe:
+
+```bash
+sudo raspi-config
+```
+Navigate to **Display Options → Screen Blanking → No**.
+
+This ensures the display stays on indefinitely, even across reboots.
+
 #### How It Works
 1. **Home Screen**: Shows "Haptic Collection Media Player" with animated NFC icon
 2. **Chip Detected**: Instantly displays the mapped HTML content
@@ -176,6 +187,11 @@ html_content/
 ./check_status.sh
 ```
 Shows what's running and port status.
+
+### Screen Goes Black After a While
+The display turning off is caused by Raspberry Pi OS screen blanking. Make sure you have disabled it:
+1. Run `sudo raspi-config` → **Display Options** → **Screen Blanking** → **No**
+2. Use `start_display.sh` (not `start_display_simple.sh`) — it includes `xset` and `setterm` commands that disable screen blanking at the X11 level.
 
 ### NFC Not Detecting
 1. Check hardware connections
@@ -243,6 +259,7 @@ HapticCollectionMediaPlayer/
 - **Optimize for display**: Design HTML for your screen resolution
 - **Use unique chips**: Each NFC chip needs a unique UID
 - **Hide the reader**: Can work through thin materials
+- **Disable screen blanking**: Run `sudo raspi-config` → Display Options → Screen Blanking → No (see [Disabling Screen Blanking](#disabling-screen-blanking-important-for-exhibitions))
 
 ## 🔒 Security Note
 

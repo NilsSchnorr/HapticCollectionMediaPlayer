@@ -4,6 +4,14 @@ echo "========================================="
 echo "Starting NFC Display System"
 echo "========================================="
 
+# Disable screen blanking / screensaver / DPMS
+# These prevent the display from turning off due to inactivity
+echo "Disabling screen blanking..."
+xset s off 2>/dev/null
+xset -dpms 2>/dev/null
+xset s norestart 2>/dev/null
+setterm -blank 0 -powerdown 0 2>/dev/null || true
+
 # Check if management server is running on port 5000
 if lsof -i:5000 > /dev/null 2>&1; then
     echo "Note: Management interface is running on port 5000"

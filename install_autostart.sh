@@ -65,6 +65,23 @@ fi
 chmod +x "$KIOSK_SCRIPT"
 echo "  kiosk.sh is executable."
 
+# xdotool is used by kiosk.sh for the automatic first-load refresh
+# (works around Chromium's blank first paint on cold boot).
+# Best-effort install: an offline install must never fail here.
+if command -v xdotool > /dev/null; then
+    echo "  xdotool already installed."
+else
+    echo "  Installing xdotool (for automatic first-load refresh)..."
+    if sudo apt-get install -y xdotool > /dev/null 2>&1; then
+        echo "  xdotool installed."
+    else
+        echo "  WARNING: Could not install xdotool (no internet connection?)."
+        echo "  The kiosk will still start, but if it shows a white screen"
+        echo "  after boot, press F5 once. To enable the automatic refresh,"
+        echo "  run this while online:  sudo apt install xdotool"
+    fi
+fi
+
 # -----------------------------------------
 # Step 3: LXDE autostart (X11 sessions)
 #

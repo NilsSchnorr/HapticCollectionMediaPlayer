@@ -16,8 +16,9 @@ URL="http://localhost:8080"
 
 # -----------------------------------------
 # Guard 1: file lock (race-free single instance)
-# The lock file descriptor is inherited by Chromium via exec, so the lock
-# stays held for as long as the kiosk browser is running.
+# The lock file descriptor (9) stays open for the lifetime of this
+# script, and the script waits on the browser at the end — so the lock
+# is held for as long as the kiosk browser is running.
 # -----------------------------------------
 LOCKFILE="/tmp/hcmp-kiosk.lock"
 exec 9>"$LOCKFILE"
@@ -77,9 +78,44 @@ if [ "$BACKEND_UP" -eq 0 ]; then
     echo "         Check:  sudo systemctl status hcmp-display" >&2
 fi
 
+# Give the desktop session a moment to finish compositing before the
+# browser makes its first paint (reduces the white-screen race).
+sleep 3
+
 # -----------------------------------------
-# Launch Chromium in kiosk mode
+# Launch Chromium in kiosk mode.
+# Launched in the background (not exec) so we can trigger the
+# first-load refresh below; the script waits on the browser at the
+# end, keeping the single-instance lock held while it runs.
 # -----------------------------------------
-exec "$BROWSER" --kiosk --noerrdialogs --disable-infobars \
+"$BROWSER" --kiosk --noerrdialogs --disable-infobars \
     --disable-session-crashed-bubble --disable-restore-session-state \
-    "$URL"
+    "$URL" &
+BROWSER_PID=$!
+
+# -----------------------------------------
+# Automatic first-load refresh (X11 only).
+# On a cold boot, Chromium's very first paint can come up blank/white
+# because the renderer starts before the desktop is fully ready. A
+# single reload fixes it — this automates the manual Ctrl+R:
+# wait for the kiosk window to appear, give the (possibly blank)
+# first paint a moment, then send one F5 keypress.
+# -----------------------------------------
+if command -v xdotool > /dev/null && [ -n "$DISPLAY" ]; then
+    (
+        WID=$(timeout 30 xdotool search --sync --onlyvisible --class chromium 2>/dev/null | head -1)
+        if [ -n "$WID" ]; then
+            sleep 5
+            xdotool windowactivate --sync "$WID" 2>/dev/null
+            xdotool key --clearmodifiers F5 2>/dev/null
+            echo "First-load refresh sent."
+        fi
+    ) &
+else
+    echo "NOTE: xdotool not available - skipping automatic first-load refresh."
+    echo "      If the kiosk shows a white screen after boot, press F5 once,"
+    echo "      and install the helper for next time:  sudo apt install xdotool"
+fi
+
+# Keep the script (and the lock) alive for the browser's lifetime.
+wait "$BROWSER_PID"

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestattung – Das Hundekopfrelief – Haptic Collection</title>
+    <style>
+        /* ------------------------------------------------------------
+           Farbpalette aus dem Plakatdesign "Bestattung / Hundekopfrelief"
+           ------------------------------------------------------------ */
+        :root {
+            --field: #D0D4EB;      /* heller Perlgrau-Flieder (Plakathintergrund) */
+            --panel: #C8CCE8;      /* Panelton */
+            --navy:  #1A2250;      /* dunkles Blau (Schrift/Flächen) */
+            --mid:   #8A94C8;      /* mittleres Blauviolett (Akzente) */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--field);
+            color: var(--navy);
+            font-family: Cambria, Georgia, 'Times New Roman', serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 2.2vh 3vw;
+        }
+
+        /* ---------------- Kopfzeile ---------------- */
+        header {
+            text-align: center;
+            flex: 0 0 auto;
+        }
+
+        .eyebrow {
+            font-size: clamp(0.7rem, 1.4vh, 1rem);
+            letter-spacing: 0.45em;
+            text-transform: uppercase;
+            color: var(--mid);
+            margin-bottom: 0.8vh;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 5vh, 3.2rem);
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2.2vh, 1.4rem);
+            font-style: italic;
+            color: var(--navy);
+            opacity: 0.85;
+            margin-top: 0.6vh;
+        }
+
+        /* ---------------- Videobühne ---------------- */
+        main {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;               /* erlaubt dem Video zu schrumpfen */
+            padding: 2vh 0;
+        }
+
+        .video-frame {
+            position: relative;
+            height: 100%;
+            max-height: 100%;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: var(--navy);
+            border: 3px solid var(--navy);
+            outline: 1px solid var(--mid);
+            outline-offset: 6px;
+            box-shadow: 0 10px 30px rgba(26, 34, 80, 0.25);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        /* Overlay: Hinweis zum Einschalten des Tons (Fallback bei stummem Autoplay) */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 3vh;
+            pointer-events: none;
+        }
+
+        .overlay.visible { display: flex; }
+
+        .overlay .pill {
+            background-color: rgba(26, 34, 80, 0.85);
+            color: var(--field);
+            font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+            font-size: clamp(0.85rem, 2vh, 1.2rem);
+            letter-spacing: 0.08em;
+            padding: 0.6em 1.4em;
+            border: 1px solid var(--mid);
+            border-radius: 999px;
+        }
+
+        /* Endkarte nach dem Video */
+        .endcard {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5vh;
+            background-color: rgba(26, 34, 80, 0.92);
+            color: var(--field);
+            text-align: center;
+            padding: 4vh 4vw;
+        }
+
+        .endcard.visible { display: flex; }
+
+        .endcard .end-title {
+            font-size: clamp(1.2rem, 3.5vh, 2rem);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+        }
+
+        .endcard .end-hint {
+            font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+            font-size: clamp(0.9rem, 2.2vh, 1.3rem);
+            color: var(--panel);
+            max-width: 40ch;
+            line-height: 1.5;
+        }
+
+        /* ---------------- Fußzeile ---------------- */
+        footer {
+            flex: 0 0 auto;
+            text-align: center;
+            border-top: 1px solid var(--mid);
+            padding-top: 1.4vh;
+        }
+
+        .footer-line {
+            font-size: clamp(0.65rem, 1.4vh, 0.95rem);
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: var(--navy);
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="eyebrow">Vicus &middot; Wareswald &middot; 2026</div>
+        <h1>Bestattung</h1>
+        <div class="subtitle">Das Hundekopfrelief des Pfeilergrabmals</div>
+    </header>
+
+    <main>
+        <div class="video-frame">
+            <video id="stationVideo"
+                   src="videos/TestversionMediastationHundekopf.mp4"
+                   autoplay
+                   playsinline
+                   preload="auto"></video>
+
+            <div class="overlay" id="muteOverlay">
+                <div class="pill">Bildschirm ber&uuml;hren, um den Ton einzuschalten</div>
+            </div>
+
+            <div class="endcard" id="endCard">
+                <div class="end-title">Ende</div>
+                <div class="end-hint">
+                    Legen Sie das Objekt erneut auf den Leser,
+                    um das Video noch einmal zu starten &ndash;
+                    oder ber&uuml;hren Sie den Bildschirm.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-line">Universit&auml;t des Saarlandes &middot; Vicus Wareswald &middot; Anno MMXXVI</div>
+    </footer>
+
+    <script>
+        (function () {
+            const video = document.getElementById('stationVideo');
+            const muteOverlay = document.getElementById('muteOverlay');
+            const endCard = document.getElementById('endCard');
+
+            // Autoplay-Strategie:
+            // 1. Versuch: mit Ton starten (funktioniert, wenn Chromium mit
+            //    --autoplay-policy=no-user-gesture-required laeuft).
+            // 2. Fallback: stumm starten (von jeder Autoplay-Policy erlaubt)
+            //    und Hinweis einblenden, dass eine Beruehrung den Ton aktiviert.
+            async function startPlayback() {
+                try {
+                    await video.play();
+                } catch (err) {
+                    video.muted = true;
+                    try {
+                        await video.play();
+                        muteOverlay.classList.add('visible');
+                    } catch (err2) {
+                        // Sollte im Kiosk nie passieren; Endkarte als Notausstieg.
+                        endCard.classList.add('visible');
+                    }
+                }
+            }
+
+            // Jede Nutzereingabe (Touch/Klick) zaehlt als Geste:
+            // Ton einschalten bzw. Video neu starten.
+            function onUserGesture() {
+                if (endCard.classList.contains('visible')) {
+                    endCard.classList.remove('visible');
+                    video.currentTime = 0;
+                    video.play().catch(function () {});
+                    return;
+                }
+                if (video.muted) {
+                    video.muted = false;
+                    muteOverlay.classList.remove('visible');
+                    if (video.paused) {
+                        video.play().catch(function () {});
+                    }
+                }
+            }
+
+            video.addEventListener('ended', function () {
+                endCard.classList.add('visible');
+            });
+
+            document.addEventListener('pointerdown', onUserGesture);
+
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                startPlayback();
+            } else {
+                document.addEventListener('DOMContentLoaded', startPlayback);
+            }
+        })();
+    </script>
+</body>
+</html>

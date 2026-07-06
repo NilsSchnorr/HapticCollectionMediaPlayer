@@ -16,6 +16,7 @@ chmod +x start_display_simple.sh
 chmod +x start_demo.sh
 chmod +x install_autostart.sh
 chmod +x uninstall_autostart.sh
+chmod +x kiosk.sh
 
 # Make Python scripts executable
 echo "Making Python scripts executable..."

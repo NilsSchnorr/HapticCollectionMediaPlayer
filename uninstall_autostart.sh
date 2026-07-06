@@ -19,7 +19,7 @@ CURRENT_USER=$(whoami)
 # -----------------------------------------
 # Step 1: Remove systemd service
 # -----------------------------------------
-echo "[1/2] Removing systemd service..."
+echo "[1/4] Removing systemd service..."
 
 sudo systemctl stop hcmp-display.service 2>/dev/null
 sudo systemctl disable hcmp-display.service 2>/dev/null
@@ -30,15 +30,47 @@ echo "  Service removed."
 # -----------------------------------------
 # Step 2: Remove LXDE autostart entries
 # -----------------------------------------
-echo "[2/2] Removing Chromium kiosk autostart..."
+echo "[2/4] Removing LXDE autostart entries..."
 
 AUTOSTART_FILE="/home/$CURRENT_USER/.config/lxsession/LXDE-pi/autostart"
 
 if [ -f "$AUTOSTART_FILE" ]; then
     sed -i '/^# --- HCMP START ---$/,/^# --- HCMP END ---$/d' "$AUTOSTART_FILE"
-    echo "  Autostart entries removed."
+    echo "  LXDE autostart entries removed."
 else
-    echo "  No autostart file found, nothing to remove."
+    echo "  No LXDE autostart file found, nothing to remove."
+fi
+
+# -----------------------------------------
+# Step 3: Remove XDG autostart entry
+# -----------------------------------------
+echo "[3/4] Removing XDG autostart entry..."
+
+XDG_DESKTOP_FILE="/home/$CURRENT_USER/.config/autostart/hcmp-kiosk.desktop"
+
+if [ -f "$XDG_DESKTOP_FILE" ]; then
+    rm -f "$XDG_DESKTOP_FILE"
+    echo "  XDG autostart entry removed."
+else
+    echo "  No XDG autostart entry found, nothing to remove."
+fi
+
+# -----------------------------------------
+# Step 4: Remove labwc autostart entries
+# -----------------------------------------
+echo "[4/4] Removing labwc autostart entries..."
+
+LABWC_FILE="/home/$CURRENT_USER/.config/labwc/autostart"
+
+if [ -f "$LABWC_FILE" ]; then
+    sed -i '/^# --- HCMP START ---$/,/^# --- HCMP END ---$/d' "$LABWC_FILE"
+    # Remove the file entirely if nothing else is left in it
+    if [ ! -s "$LABWC_FILE" ]; then
+        rm -f "$LABWC_FILE"
+    fi
+    echo "  labwc autostart entries removed."
+else
+    echo "  No labwc autostart file found, nothing to remove."
 fi
 
 echo ""

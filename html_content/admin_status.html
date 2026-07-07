@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCMP System Status</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, sans-serif;
+    background: #0f1216; color: #e8ecf1;
+    min-height: 100vh; padding: 2rem;
+  }
+  .wrap { max-width: 1500px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  header h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: 0.02em; }
+  header .sub { color: #8b98a5; font-size: 0.95rem; }
+  .badge {
+    font-size: 0.75rem; padding: 0.15rem 0.6rem; border-radius: 999px;
+    background: #2b3440; color: #9fb0c0; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  #offlineBanner {
+    display: none; background: #5a1f1c; border: 1px solid #e5534b; color: #ffd8d5;
+    padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; font-weight: 500;
+  }
+  .cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 0.9rem; margin-bottom: 1.2rem;
+  }
+  .card {
+    background: #1a1f26; border: 1px solid #262d36; border-radius: 10px; padding: 1rem 1.1rem;
+  }
+  .card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #8b98a5; margin-bottom: 0.4rem; }
+  .card .value { font-size: 1.45rem; font-weight: 600; line-height: 1.2; word-break: break-word; }
+  .card .hint { font-size: 0.75rem; color: #6b7885; margin-top: 0.35rem; }
+  .value.ok { color: #34c98e; }
+  .value.warn { color: #e3b341; }
+  .value.bad { color: #e5534b; }
+  .strip {
+    background: #1a1f26; border: 1px solid #262d36; border-radius: 10px;
+    padding: 0.8rem 1.1rem; margin-bottom: 1.6rem; font-size: 0.95rem; color: #b9c4cf;
+  }
+  .strip code { background: #262d36; padding: 0.1rem 0.45rem; border-radius: 5px; font-size: 0.9em; }
+  h2 { font-size: 1.1rem; font-weight: 600; margin: 1.6rem 0 0.8rem; color: #cfd8e0; }
+  .totals { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+  .totals .card { min-width: 215px; }
+  .totals .value { font-size: 2.2rem; }
+  table { width: 100%; border-collapse: collapse; background: #1a1f26; border: 1px solid #262d36; border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid #262d36; font-size: 0.95rem; }
+  th { background: #21272f; color: #8b98a5; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  th.num { text-align: right; }
+  tr.unmapped td { color: #e3b341; }
+  .chart {
+    background: #1a1f26; border: 1px solid #262d36; border-radius: 10px; padding: 1.1rem 1.1rem 0.7rem;
+  }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 140px; }
+  .barcol { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .bar { background: #4d7cc7; border-radius: 3px 3px 0 0; min-height: 0; transition: height 0.4s ease; }
+  .bar.today { background: #34c98e; }
+  .barlabels { display: flex; gap: 4px; margin-top: 0.4rem; }
+  .barlabels span { flex: 1; text-align: center; font-size: 0.68rem; color: #6b7885; white-space: nowrap; overflow: visible; }
+  .empty { color: #6b7885; padding: 1rem; font-size: 0.95rem; }
+  footer { margin-top: 2rem; color: #4d5864; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>HCMP System Status</h1>
+    <span class="badge">staff only</span>
+    <span class="sub" id="hostinfo">connecting&hellip;</span>
+  </header>
+
+  <div id="offlineBanner">Backend not reachable &mdash; the display service (nfc_display.py) is not responding.</div>
+
+  <div class="cards">
+    <div class="card"><div class="label">NFC Reader</div><div class="value" id="readerStatus">&ndash;</div><div class="hint" id="readerHint"></div></div>
+    <div class="card"><div class="label">Last read cycle</div><div class="value" id="lastRead">&ndash;</div><div class="hint">should stay below ~2 s</div></div>
+    <div class="card"><div class="label">Read errors (in a row)</div><div class="value" id="readErrors">&ndash;</div><div class="hint">recovers automatically at 10</div></div>
+    <div class="card"><div class="label">Uptime</div><div class="value" id="uptime">&ndash;</div><div class="hint">since last service (re)start</div></div>
+    <div class="card"><div class="label">Mappings</div><div class="value" id="mappings">&ndash;</div><div class="hint" id="homeScreen"></div></div>
+    <div class="card"><div class="label">Pi clock</div><div class="value" id="piClock" style="font-size:1.1rem">&ndash;</div><div class="hint" id="clockDrift">no RTC &mdash; may drift after power cuts</div></div>
+  </div>
+
+  <div class="strip" id="currentTag">Current tag: none</div>
+
+  <h2>Visitor Interactions</h2>
+  <div class="totals">
+    <div class="card"><div class="label">Total</div><div class="value" id="statTotal">&ndash;</div><div class="hint" id="statRange"></div></div>
+    <div class="card"><div class="label">Today</div><div class="value ok" id="statToday">&ndash;</div><div class="hint">since midnight (Pi clock)</div></div>
+  </div>
+
+  <h2>Per Object</h2>
+  <div id="objectTable"><div class="empty">No interactions logged yet.</div></div>
+
+  <h2>By Hour of Day</h2>
+  <div class="chart">
+    <div class="bars" id="hourBars"></div>
+    <div class="barlabels" id="hourLabels"></div>
+  </div>
+
+  <h2>Last 14 Days</h2>
+  <div class="chart">
+    <div class="bars" id="dayBars"></div>
+    <div class="barlabels" id="dayLabels"></div>
+  </div>
+
+  <footer>Auto-refresh: health every 2 s, statistics every 15 s. Also reachable at http://&lt;pi&gt;:8080/content/admin_status.html</footer>
+</div>
+
+<script>
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtUptime(s) {
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+  if (h > 0) return h + 'h ' + m + 'm';
+  return m + 'm ' + Math.floor(s % 60) + 's';
+}
+
+async function updateHealth() {
+  try {
+    const r = await fetch('/api/health');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const h = await r.json();
+    document.getElementById('offlineBanner').style.display = 'none';
+
+    document.getElementById('hostinfo').textContent = h.hostname + ' \u00b7 port 8080';
+
+    const rs = document.getElementById('readerStatus');
+    const hint = document.getElementById('readerHint');
+    const fresh = h.seconds_since_last_read !== null && h.seconds_since_last_read < 10;
+    if (h.nfc_available && fresh) {
+      rs.textContent = 'OK'; rs.className = 'value ok';
+      hint.textContent = 'reading normally';
+    } else if (h.nfc_available) {
+      rs.textContent = 'STALLED'; rs.className = 'value warn';
+      hint.textContent = 'reader initialized, but no recent read cycle';
+    } else {
+      rs.textContent = 'NOT AVAILABLE'; rs.className = 'value bad';
+      hint.textContent = 'reader not initialized (dev mode or hardware problem)';
+    }
+
+    const lr = document.getElementById('lastRead');
+    if (h.seconds_since_last_read === null) {
+      lr.textContent = 'never'; lr.className = 'value bad';
+    } else {
+      lr.textContent = h.seconds_since_last_read.toFixed(1) + ' s ago';
+      lr.className = 'value ' + (h.seconds_since_last_read < 10 ? 'ok' : 'warn');
+    }
+
+    const re = document.getElementById('readErrors');
+    re.textContent = h.consecutive_read_errors;
+    re.className = 'value ' + (h.consecutive_read_errors === 0 ? 'ok' : 'warn');
+
+    document.getElementById('uptime').textContent = fmtUptime(h.uptime_seconds);
+    document.getElementById('mappings').textContent = h.mappings_count;
+    document.getElementById('homeScreen').textContent = h.home_screen ? 'home: ' + h.home_screen : 'built-in home screen';
+
+    document.getElementById('piClock').textContent = h.server_time.replace('T', ' ');
+    const drift = (new Date(h.server_time) - new Date()) / 1000;
+    const driftEl = document.getElementById('clockDrift');
+    if (Math.abs(drift) > 120) {
+      driftEl.textContent = 'differs from this device by ~' + Math.round(Math.abs(drift) / 60) + ' min';
+      driftEl.style.color = '#e3b341';
+    } else {
+      driftEl.textContent = 'no RTC \u2014 may drift after power cuts';
+      driftEl.style.color = '';
+    }
+
+    const ct = document.getElementById('currentTag');
+    if (h.current_uid) {
+      ct.innerHTML = 'Current tag: <code>' + esc(h.current_uid) + '</code> \u2192 ' +
+        (h.current_html ? '<code>' + esc(h.current_html) + '</code>' : '<span style="color:#e3b341">unmapped</span>');
+    } else {
+      ct.textContent = 'Current tag: none';
+    }
+  } catch (e) {
+    document.getElementById('offlineBanner').style.display = 'block';
+  }
+}
+
+function renderBars(barsEl, labelsEl, values, labels, labelEvery, highlightIdx) {
+  const max = Math.max.apply(null, values.concat([1]));
+  barsEl.innerHTML = '';
+  labelsEl.innerHTML = '';
+  values.forEach((v, i) => {
+    const col = document.createElement('div');
+    col.className = 'barcol';
+    col.title = labels[i] + ': ' + v;
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (i === highlightIdx ? ' today' : '');
+    bar.style.height = v > 0 ? Math.max(3, Math.round(v / max * 100)) + '%' : '0';
+    col.appendChild(bar);
+    barsEl.appendChild(col);
+    const span = document.createElement('span');
+    span.textContent = (i % labelEvery === 0) ? labels[i] : '';
+    labelsEl.appendChild(span);
+  });
+}
+
+async function updateStats() {
+  try {
+    const r = await fetch('/api/stats');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const s = await r.json();
+
+    document.getElementById('statTotal').textContent = s.total;
+    document.getElementById('statToday').textContent = s.today;
+    document.getElementById('statRange').textContent =
+      s.first_interaction ? 'since ' + s.first_interaction.slice(0, 10) : 'no data yet';
+
+    const objs = Object.entries(s.by_object).sort((a, b) => b[1].total - a[1].total);
+    const tableDiv = document.getElementById('objectTable');
+    if (objs.length === 0) {
+      tableDiv.innerHTML = '<div class="empty">No interactions logged yet.</div>';
+    } else {
+      let html = '<table><thead><tr><th>Content file</th><th class="num">Total</th><th class="num">Today</th></tr></thead><tbody>';
+      for (const [file, c] of objs) {
+        html += '<tr' + (file === 'unmapped' ? ' class="unmapped"' : '') + '><td>' + esc(file) +
+                '</td><td class="num">' + c.total + '</td><td class="num">' + c.today + '</td></tr>';
+      }
+      html += '</tbody></table>';
+      tableDiv.innerHTML = html;
+    }
+
+    // Hour histogram (0-23)
+    const hourLabels = [];
+    for (let i = 0; i < 24; i++) hourLabels.push(i + 'h');
+    renderBars(document.getElementById('hourBars'), document.getElementById('hourLabels'),
+               s.by_hour, hourLabels, 3, -1);
+
+    // Last 14 calendar days, missing days filled with 0
+    const days = [], dayValues = [], dayLabels = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      days.push(key);
+      dayValues.push(s.by_day[key] || 0);
+      dayLabels.push(String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.');
+    }
+    renderBars(document.getElementById('dayBars'), document.getElementById('dayLabels'),
+               dayValues, dayLabels, 1, 13);
+  } catch (e) {
+    // health poller already handles the offline banner
+  }
+}
+
+updateHealth();
+updateStats();
+setInterval(updateHealth, 2000);
+setInterval(updateStats, 15000);
+</script>
+</body>
+</html>

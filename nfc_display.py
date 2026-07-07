@@ -13,6 +13,7 @@ from datetime import datetime
 import threading
 import signal
 import atexit
+import socket
 
 # Add the python directory to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
@@ -62,6 +63,7 @@ current_html = None
 is_reading = False
 last_successful_read = None   # time.time() of the last error-free read cycle
 consecutive_read_errors = 0   # updated by the reader thread
+APP_START_TIME = time.time()  # for uptime reporting on the admin page
 _cleanup_done = False
 
 # Hardware libraries are only present on the Pi. If they are missing we
@@ -635,6 +637,27 @@ def nfc_status():
 def interaction_stats():
     """Aggregated visitor interaction statistics from the CSV log"""
     return jsonify(read_interaction_stats())
+
+@app.route('/api/health')
+def health():
+    """System health for the staff/admin status page"""
+    now = time.time()
+    seconds_since_last_read = None
+    if last_successful_read is not None:
+        seconds_since_last_read = round(now - last_successful_read, 1)
+    return jsonify({
+        'nfc_available': nfc_available,
+        'seconds_since_last_read': seconds_since_last_read,
+        'consecutive_read_errors': consecutive_read_errors,
+        'current_uid': current_uid,
+        'current_html': current_html,
+        'mappings_count': len(load_mappings()),
+        'uptime_seconds': round(now - APP_START_TIME),
+        'removal_grace_reads': REMOVAL_GRACE_READS,
+        'home_screen': HOME_FILE,
+        'hostname': socket.gethostname(),
+        'server_time': datetime.now().isoformat(timespec='seconds'),
+    })
 
 @app.route('/content/<path:filename>')
 def serve_content(filename):

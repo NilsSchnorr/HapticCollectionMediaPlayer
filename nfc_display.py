@@ -4,6 +4,7 @@ NFC Display System - Shows home base and switches to mapped HTML when chip detec
 """
 
 from flask import Flask, render_template_string, jsonify, send_from_directory
+import csv
 import json
 import os
 import sys
@@ -44,6 +45,12 @@ INIT_RETRY_DELAY = 3         # seconds between startup init attempts
 REINIT_ERROR_THRESHOLD = 10  # consecutive read errors before re-init
 REINIT_MAX_ATTEMPTS = 3      # re-init attempts before giving up
 REINIT_RETRY_DELAY = 2       # seconds between re-init attempts
+
+# Interaction logging: one CSV row per genuine (post-debounce) chip
+# detection. The logs/ directory is gitignored.
+LOG_DIR = 'logs'
+INTERACTIONS_LOG = os.path.join(LOG_DIR, 'interactions.csv')
+LOG_HEADER = ['timestamp', 'uid', 'html_file']
 
 # ---------------------------------------------------------------
 # NFC reader state
@@ -190,6 +197,77 @@ def load_mappings():
             return json.load(f)
     return {}
 
+# ---------------------------------------------------------------
+# Interaction logging & statistics
+# ---------------------------------------------------------------
+def log_interaction(uid_hex, html_file):
+    """Append one interaction to the CSV log. Must never raise -
+    a logging problem should not disturb the exhibition."""
+    try:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        is_new = not os.path.exists(INTERACTIONS_LOG)
+        with open(INTERACTIONS_LOG, 'a', newline='') as f:
+            writer = csv.writer(f)
+            if is_new:
+                writer.writerow(LOG_HEADER)
+            writer.writerow([
+                datetime.now().isoformat(timespec='seconds'),
+                uid_hex,
+                html_file if html_file else 'unmapped'
+            ])
+    except Exception as e:
+        print(f"Could not write interaction log: {e}")
+
+def read_interaction_stats():
+    """Parse the interactions log and aggregate statistics.
+
+    Malformed or partially written lines are skipped, so reading is
+    safe even while the reader thread appends new entries.
+    """
+    stats = {
+        'total': 0,
+        'today': 0,
+        'by_object': {},
+        'by_day': {},
+        'by_hour': [0] * 24,
+        'first_interaction': None,
+        'last_interaction': None,
+        'log_file': INTERACTIONS_LOG,
+    }
+    if not os.path.exists(INTERACTIONS_LOG):
+        return stats
+
+    today = datetime.now().date()
+    try:
+        with open(INTERACTIONS_LOG, 'r', newline='') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if len(row) < 3 or row[0] == 'timestamp':
+                    continue  # header, malformed, or partial line
+                try:
+                    ts = datetime.fromisoformat(row[0])
+                except ValueError:
+                    continue
+                html_file = row[2] or 'unmapped'
+
+                stats['total'] += 1
+                day_key = ts.date().isoformat()
+                stats['by_day'][day_key] = stats['by_day'].get(day_key, 0) + 1
+                stats['by_hour'][ts.hour] += 1
+
+                obj = stats['by_object'].setdefault(html_file, {'total': 0, 'today': 0})
+                obj['total'] += 1
+                if ts.date() == today:
+                    obj['today'] += 1
+                    stats['today'] += 1
+
+                if stats['first_interaction'] is None:
+                    stats['first_interaction'] = row[0]
+                stats['last_interaction'] = row[0]
+    except Exception as e:
+        print(f"Could not read interaction log: {e}")
+    return stats
+
 # Resolve which idle/home screen this installation shows.
 # Order: HCMP_HOME_SCREEN env var -> config.json "home_screen" -> built-in default.
 # Falls back to the built-in screen if the configured file is missing.
@@ -251,6 +329,10 @@ def nfc_reader_thread():
                     else:
                         current_html = None
                         print("No mapping found")
+
+                    # Log the interaction. This sits behind the removal
+                    # debounce, so read blips don't inflate the numbers.
+                    log_interaction(uid_hex, current_html)
             else:
                 # No chip seen this cycle. Only treat the chip as removed
                 # after REMOVAL_GRACE_READS consecutive misses, so short
@@ -548,6 +630,11 @@ def nfc_status():
         'html': current_html,
         'timestamp': datetime.now().isoformat()
     })
+
+@app.route('/api/stats')
+def interaction_stats():
+    """Aggregated visitor interaction statistics from the CSV log"""
+    return jsonify(read_interaction_stats())
 
 @app.route('/content/<path:filename>')
 def serve_content(filename):

@@ -16,13 +16,59 @@ import atexit
 # Add the python directory to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
 
-# Initialize NFC reader
+# ---------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------
+def load_config():
+    """Read config.json from the working directory. Returns {} on any problem."""
+    if os.path.exists('config.json'):
+        try:
+            with open('config.json', 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Could not read config.json: {e}")
+    return {}
+
+CONFIG = load_config()
+
+# How many consecutive failed reads before the chip counts as removed.
+# One read cycle takes ~0.5s, so 3 reads = roughly 1.5s grace period.
+# This keeps short read blips (marginal coupling, a visitor nudging the
+# object) from interrupting the content, while a deliberate removal
+# still registers quickly.
+REMOVAL_GRACE_READS = max(1, int(CONFIG.get('removal_grace_reads', 3)))
+
+# Startup / recovery tuning
+INIT_MAX_ATTEMPTS = 5        # PN532 init attempts at startup
+INIT_RETRY_DELAY = 3         # seconds between startup init attempts
+REINIT_ERROR_THRESHOLD = 10  # consecutive read errors before re-init
+REINIT_MAX_ATTEMPTS = 3      # re-init attempts before giving up
+REINIT_RETRY_DELAY = 2       # seconds between re-init attempts
+
+# ---------------------------------------------------------------
+# NFC reader state
+# ---------------------------------------------------------------
 nfc_reader = None
 nfc_available = False
 current_uid = None
 current_html = None
 is_reading = False
+last_successful_read = None   # time.time() of the last error-free read cycle
+consecutive_read_errors = 0   # updated by the reader thread
 _cleanup_done = False
+
+# Hardware libraries are only present on the Pi. If they are missing we
+# are on a development machine: run web-only and never exit because of
+# the missing reader.
+ON_PI = False
+try:
+    import RPi.GPIO as GPIO
+    from pn532 import *
+    import serial
+    ON_PI = True
+except Exception as e:
+    print(f"Hardware libraries not available ({e}).")
+    print("Running in development mode without NFC reader.")
 
 def cleanup_nfc():
     """Clean up NFC reader, serial port, and GPIO on exit."""
@@ -63,13 +109,26 @@ atexit.register(cleanup_nfc)
 signal.signal(signal.SIGTERM, signal_handler)
 signal.signal(signal.SIGINT, signal_handler)
 
-print("Initializing NFC Display System...")
-try:
-    import RPi.GPIO as GPIO
-    from pn532 import *
+# ---------------------------------------------------------------
+# NFC reader initialization (with retries and runtime recovery)
+# ---------------------------------------------------------------
+def _close_reader():
+    """Close the current reader's serial port, if any."""
+    global nfc_reader
+    if nfc_reader is not None:
+        try:
+            if hasattr(nfc_reader, '_uart') and nfc_reader._uart is not None:
+                if nfc_reader._uart.is_open:
+                    nfc_reader._uart.close()
+        except Exception:
+            pass
+    nfc_reader = None
+
+def _hw_init_once():
+    """One attempt to open and configure the PN532. Raises on failure."""
+    global nfc_reader
 
     # Force-close any leftover serial connection from a previous run
-    import serial
     try:
         _tmp_serial = serial.Serial('/dev/ttyS0', 115200)
         _tmp_serial.reset_input_buffer()
@@ -84,11 +143,42 @@ try:
     ic, ver, rev, support = nfc_reader.get_firmware_version()
     print(f'Found PN532 with firmware version: {ver}.{rev}')
     nfc_reader.SAM_configuration()
-    nfc_available = True
-    print("NFC reader initialized successfully!")
-except Exception as e:
-    print(f"Could not initialize NFC reader: {e}")
+
+def init_nfc(max_attempts=INIT_MAX_ATTEMPTS, delay=INIT_RETRY_DELAY):
+    """Initialize the PN532 with retries. Returns True on success.
+
+    Used both at startup and for runtime recovery after repeated
+    read errors.
+    """
+    global nfc_available
+    for attempt in range(1, max_attempts + 1):
+        try:
+            _close_reader()
+            _hw_init_once()
+            nfc_available = True
+            print("NFC reader initialized successfully!")
+            return True
+        except Exception as e:
+            print(f"NFC init attempt {attempt}/{max_attempts} failed: {e}")
+            if attempt < max_attempts:
+                time.sleep(delay)
     nfc_available = False
+    return False
+
+print("Initializing NFC Display System...")
+if ON_PI:
+    if not init_nfc():
+        # On the Pi a missing reader is a hard failure: exit non-zero so
+        # systemd (Restart=always, RestartSec=10) keeps retrying until
+        # the reader is available - e.g. after a cold boot where the
+        # reader powers up slowly, or after nfc_web_server.py releases
+        # the serial port.
+        print(f"FATAL: Could not initialize NFC reader after {INIT_MAX_ATTEMPTS} attempts.")
+        print("Exiting so systemd can restart the service.")
+        print("If you are running manually, check that the reader is connected")
+        print("and that nothing else holds /dev/ttyS0 (e.g. nfc_web_server.py).")
+        cleanup_nfc()
+        sys.exit(1)
 
 # Flask app
 app = Flask(__name__)
@@ -105,12 +195,8 @@ def load_mappings():
 # Falls back to the built-in screen if the configured file is missing.
 def resolve_home_screen():
     candidate = os.environ.get('HCMP_HOME_SCREEN')
-    if not candidate and os.path.exists('config.json'):
-        try:
-            with open('config.json', 'r') as f:
-                candidate = json.load(f).get('home_screen')
-        except Exception as e:
-            print(f"Could not read config.json: {e}")
+    if not candidate:
+        candidate = CONFIG.get('home_screen')
     candidate = (candidate or '').strip()
     if candidate and os.path.exists(os.path.join('html_content', candidate)):
         print(f"Home screen: {candidate}")
@@ -126,31 +212,38 @@ HOME_FILE = resolve_home_screen()
 # NFC reading thread
 def nfc_reader_thread():
     global current_uid, current_html, is_reading
-    
+    global last_successful_read, consecutive_read_errors
+
     if not nfc_available:
         return
-    
-    print("NFC monitoring started...")
+
+    print(f"NFC monitoring started (removal grace: {REMOVAL_GRACE_READS} reads)...")
     is_reading = True
     mappings = load_mappings()
     last_reload = time.time()
-    
+    missed_reads = 0
+
     while is_reading:
         try:
             # Reload mappings every 10 seconds
             if time.time() - last_reload > 10:
                 mappings = load_mappings()
                 last_reload = time.time()
-            
+
             # Read NFC
             uid = nfc_reader.read_passive_target(timeout=0.5)
-            
+
+            # The read cycle itself worked (whether or not a chip is present)
+            consecutive_read_errors = 0
+            last_successful_read = time.time()
+
             if uid:
+                missed_reads = 0
                 uid_hex = ''.join([format(i, '02x') for i in uid])
                 if uid_hex != current_uid:
                     current_uid = uid_hex
                     print(f"Chip detected: {uid_hex}")
-                    
+
                     # Check mapping
                     if uid_hex in mappings:
                         current_html = mappings[uid_hex]['html_file']
@@ -159,15 +252,42 @@ def nfc_reader_thread():
                         current_html = None
                         print("No mapping found")
             else:
+                # No chip seen this cycle. Only treat the chip as removed
+                # after REMOVAL_GRACE_READS consecutive misses, so short
+                # read blips don't interrupt the content.
                 if current_uid:
-                    print("Chip removed")
-                current_uid = None
-                current_html = None
-                
+                    missed_reads += 1
+                    if missed_reads >= REMOVAL_GRACE_READS:
+                        print("Chip removed")
+                        current_uid = None
+                        current_html = None
+                        missed_reads = 0
+                else:
+                    missed_reads = 0
+
         except Exception as e:
-            print(f"Error in NFC thread: {e}")
-            time.sleep(1)
-    
+            consecutive_read_errors += 1
+            print(f"Error in NFC thread ({consecutive_read_errors} in a row): {e}")
+
+            if consecutive_read_errors >= REINIT_ERROR_THRESHOLD:
+                print("Too many consecutive read errors - attempting to re-initialize the NFC reader...")
+                if init_nfc(max_attempts=REINIT_MAX_ATTEMPTS, delay=REINIT_RETRY_DELAY):
+                    print("NFC reader recovered.")
+                    consecutive_read_errors = 0
+                    # Re-init interrupts reading; start fresh.
+                    current_uid = None
+                    current_html = None
+                    missed_reads = 0
+                else:
+                    # Recovery failed: exit the whole process (non-zero) so
+                    # systemd restarts the service cleanly.
+                    print("FATAL: NFC reader re-initialization failed.")
+                    print("Exiting so systemd can restart the service.")
+                    cleanup_nfc()
+                    os._exit(1)
+            else:
+                time.sleep(1)
+
     print("NFC reader thread stopped.")
 
 # Main display page

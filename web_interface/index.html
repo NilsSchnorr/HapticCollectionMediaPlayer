@@ -250,6 +250,17 @@
             display: flex;
             gap: 0.5rem;
         }
+        
+        .uid-warning {
+            display: none;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
@@ -285,6 +296,7 @@
                 <div class="form-group">
                     <label for="nfcUID">NFC Chip UID</label>
                     <input type="text" id="nfcUID" name="nfcUID" placeholder="Scan an NFC chip or enter UID manually" required>
+                    <div id="uidWarning" class="uid-warning"></div>
                 </div>
                 
                 <div class="form-group">
@@ -318,6 +330,7 @@
     <script>
         let currentDetectedUID = null;
         let pollInterval = null;
+        let allMappings = {};
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -327,6 +340,9 @@
             
             // Setup form submission
             document.getElementById('mappingForm').addEventListener('submit', handleFormSubmit);
+            
+            // Warn when the entered/scanned UID already has a mapping
+            document.getElementById('nfcUID').addEventListener('input', checkUidWarning);
         });
 
         // Start polling for NFC chips
@@ -351,6 +367,7 @@
                     if (data.uid !== currentDetectedUID) {
                         currentDetectedUID = data.uid;
                         document.getElementById('nfcUID').value = data.uid;
+                        checkUidWarning();
                         
                         // Highlight the detected chip
                         const detectedChipDiv = document.getElementById('detectedChip');
@@ -392,11 +409,33 @@
             }
         }
 
+        // Show a warning if the UID in the form already has a mapping,
+        // so an existing mapping is never overwritten by accident.
+        function checkUidWarning() {
+            const uid = document.getElementById('nfcUID').value.trim();
+            const warning = document.getElementById('uidWarning');
+            const submitBtn = document.querySelector('#mappingForm button[type="submit"]');
+            const existing = allMappings[uid] || allMappings[uid.toLowerCase()];
+            
+            if (existing) {
+                warning.textContent = '\u26a0 This chip is already mapped to "' + existing.html_file + '"' +
+                    (existing.description ? ' (' + existing.description + ')' : '') +
+                    '. Saving will overwrite the existing mapping.';
+                warning.style.display = 'block';
+                submitBtn.textContent = 'Overwrite Mapping';
+            } else {
+                warning.style.display = 'none';
+                submitBtn.textContent = 'Save Mapping';
+            }
+        }
+
         // Load existing mappings
         async function loadMappings() {
             try {
                 const response = await fetch('/api/mappings');
                 const mappings = await response.json();
+                allMappings = mappings;
+                checkUidWarning();
                 
                 const mappingsList = document.getElementById('mappingsList');
                 

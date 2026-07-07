@@ -262,13 +262,19 @@ DISPLAY_HTML = '''
         .debug {
             position: fixed;
             bottom: 10px;
-            right: 10px;
+            left: 10px;
             background: rgba(0,0,0,0.8);
             padding: 10px;
             border-radius: 5px;
             font-family: monospace;
             font-size: 0.8rem;
             opacity: 0.5;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+        }
+        
+        .debug.hidden {
+            opacity: 0;
         }
     </style>
 </head>
@@ -298,6 +304,16 @@ DISPLAY_HTML = '''
         let currentUID = null;
         let checkInterval;
         let isShowingContent = false;
+        let debugHideTimer = null;
+        
+        function showDebugBanner() {
+            const debugEl = document.getElementById('debug');
+            debugEl.classList.remove('hidden');
+            if (debugHideTimer) clearTimeout(debugHideTimer);
+            debugHideTimer = setTimeout(() => {
+                debugEl.classList.add('hidden');
+            }, 10000);
+        }
         
         async function checkNFC() {
             try {
@@ -328,6 +344,7 @@ DISPLAY_HTML = '''
         function showContent(htmlFile) {
             console.log('Showing content:', htmlFile);
             isShowingContent = true;
+            showDebugBanner();
             document.getElementById('loading').style.display = 'block';
             document.getElementById('homeBase').style.display = 'none';
             
@@ -343,6 +360,7 @@ DISPLAY_HTML = '''
         function showHomeBase() {
             console.log('Returning to home base');
             isShowingContent = false;
+            showDebugBanner();
             document.getElementById('homeBase').style.display = 'flex';
             document.getElementById('contentFrame').style.display = 'none';
             document.getElementById('contentFrame').src = '';
@@ -350,6 +368,7 @@ DISPLAY_HTML = '''
         }
         
         // Start checking for NFC
+        showDebugBanner();
         checkInterval = setInterval(checkNFC, 500);
         
         // Handle visibility change to stop/start polling

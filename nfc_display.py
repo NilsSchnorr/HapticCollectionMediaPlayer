@@ -100,6 +100,29 @@ def load_mappings():
             return json.load(f)
     return {}
 
+# Resolve which idle/home screen this installation shows.
+# Order: HCMP_HOME_SCREEN env var -> config.json "home_screen" -> built-in default.
+# Falls back to the built-in screen if the configured file is missing.
+def resolve_home_screen():
+    candidate = os.environ.get('HCMP_HOME_SCREEN')
+    if not candidate and os.path.exists('config.json'):
+        try:
+            with open('config.json', 'r') as f:
+                candidate = json.load(f).get('home_screen')
+        except Exception as e:
+            print(f"Could not read config.json: {e}")
+    candidate = (candidate or '').strip()
+    if candidate and os.path.exists(os.path.join('html_content', candidate)):
+        print(f"Home screen: {candidate}")
+        return candidate
+    if candidate:
+        print(f"Configured home screen '{candidate}' not found in html_content/, using built-in default.")
+    else:
+        print("No custom home screen configured, using built-in default.")
+    return None
+
+HOME_FILE = resolve_home_screen()
+
 # NFC reading thread
 def nfc_reader_thread():
     global current_uid, current_html, is_reading
@@ -279,7 +302,7 @@ DISPLAY_HTML = '''
     </style>
 </head>
 <body>
-    <div id="homeBase">
+    <div id="homeBase"{% if home_file %} style="display: none;"{% endif %}>
         <h1 class="title">Haptic Collection<br>Media Player</h1>
         <p class="prompt">Place an object on the reader to begin</p>
         <div class="nfc-icon">
@@ -296,7 +319,7 @@ DISPLAY_HTML = '''
         <p class="status" id="status">Waiting for NFC chip...</p>
     </div>
     
-    <iframe id="contentFrame" src=""></iframe>
+    <iframe id="contentFrame" src="{% if home_file %}/content/{{ home_file }}{% endif %}"{% if home_file %} style="display: block;"{% endif %}></iframe>
     <div class="loading" id="loading">Loading content...</div>
     <div class="debug" id="debug"></div>
     
@@ -305,6 +328,7 @@ DISPLAY_HTML = '''
         let checkInterval;
         let isShowingContent = false;
         let debugHideTimer = null;
+        const HOME_FILE = {{ home_file | tojson }};
         
         function showDebugBanner() {
             const debugEl = document.getElementById('debug');
@@ -361,9 +385,17 @@ DISPLAY_HTML = '''
             console.log('Returning to home base');
             isShowingContent = false;
             showDebugBanner();
-            document.getElementById('homeBase').style.display = 'flex';
-            document.getElementById('contentFrame').style.display = 'none';
-            document.getElementById('contentFrame').src = '';
+            const iframe = document.getElementById('contentFrame');
+            if (HOME_FILE) {
+                document.getElementById('homeBase').style.display = 'none';
+                const homeSrc = '/content/' + HOME_FILE;
+                if (!iframe.src.endsWith(homeSrc)) iframe.src = homeSrc;
+                iframe.style.display = 'block';
+            } else {
+                document.getElementById('homeBase').style.display = 'flex';
+                iframe.style.display = 'none';
+                iframe.src = '';
+            }
             document.getElementById('loading').style.display = 'none';
         }
         
@@ -386,7 +418,7 @@ DISPLAY_HTML = '''
 
 @app.route('/')
 def index():
-    return render_template_string(DISPLAY_HTML)
+    return render_template_string(DISPLAY_HTML, home_file=HOME_FILE)
 
 @app.route('/api/nfc_status')
 def nfc_status():

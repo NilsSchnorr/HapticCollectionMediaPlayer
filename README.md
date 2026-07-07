@@ -305,16 +305,76 @@ sudo journalctl -u hcmp-display -f    # View live logs
 ./kiosk.sh                            # Launch the kiosk manually
 ```
 
+## 🖼️ Custom Start Screen (Exhibition Branding)
+
+The **start screen** is the idle page shown between visitors — when no object is on the reader. Out of the box this is the built-in "Haptic Collection Media Player" screen. For a themed exhibition you can replace it with your own branded HTML page, **without losing the default** for other installations.
+
+### How it works
+
+- The start screen is just an HTML file in `html_content/`, shown fullscreen in the same frame as your content pages. When an object is placed it swaps to that object's page; when the object is removed it returns to the start screen.
+- Which file is used is set in **`config.json`** in the repo root.
+- Resolution order at startup: the `HCMP_HOME_SCREEN` environment variable → `config.json` → the built-in default.
+- If no start screen is configured, or the configured file is missing, the station falls back to the built-in screen. The default is therefore always safe — a broken or empty config never leaves a blank screen.
+
+### Create your own start screen
+
+1. **Start from an existing page.** Copy the bundled example as a template:
+   ```bash
+   cp html_content/home_wareswald.html html_content/home_myexhibit.html
+   ```
+   (Any standalone HTML file works — you can also start from scratch.)
+2. **Edit the content:** title, subtitle, the "place an object" prompt, colours, and footer. Design it full-viewport (`100vh` / `100vw`) for your display's resolution.
+3. **Add images** (logos, etc.) to a subfolder of `html_content/images/`, e.g. `html_content/images/logos_myexhibit/`, and reference them with **relative paths** (`images/logos_myexhibit/logo.png`). They are committed with the repo, so they travel with an SD-card clone.
+
+> The start screen needs **no NFC or JavaScript logic** — the player shell handles chip detection and page switching. Just build a nice static (or CSS-animated) page.
+
+### Activate it
+
+Point `config.json` (repo root) at your file:
+
+```json
+{
+  "home_screen": "home_myexhibit.html"
+}
+```
+
+Then reload the display: `sudo systemctl restart hcmp-display` (or reboot). If the kiosk browser doesn't refresh on its own, press **F5**.
+
+### Use the built-in default
+
+To return to the standard "Haptic Collection Media Player" screen, either delete `config.json` or blank the value:
+
+```json
+{
+  "home_screen": ""
+}
+```
+
+### Different exhibitions from identical SD-card clones
+
+`config.json` is committed, so a cloned card comes up already branded. If you run several stations from **one** image but each needs a different start screen, set an environment variable per device instead of editing the file — it overrides `config.json`:
+
+```bash
+HCMP_HOME_SCREEN=home_myexhibit.html
+```
+
+(Set it in the `hcmp-display.service` environment, or export it before launching the backend manually.)
+
+### Worked example
+
+The repo ships with **`home_wareswald.html`** — the start screen for the *"Römisches Leben im Wareswald"* exhibition (cream/olive/navy palette, custom title and prompt, partner logos in `images/logos_vicus_wareswald/`), selected by the bundled `config.json`. Copy it and adapt.
+
 ## 🎨 Customization
 
-### Home screen appearance
+### Home / start screen appearance
 
-Edit `nfc_display.py` to customize the title text, colors and gradients, animations, and the NFC icon.
+To replace the idle start screen with your own branded page, see [Custom Start Screen](#-custom-start-screen-exhibition-branding) above. To change the **built-in default** screen itself — its title text, colours, gradients, animations, and NFC icon — edit the `DISPLAY_HTML` block in `nfc_display.py`.
 
 ### Example content structure
 
 ```
 html_content/
+├── home_wareswald.html    # Custom start screen (example)
 ├── hundekopf_video.html   # Exhibit page (video)
 ├── zeus.html              # Exhibit page
 ├── template_object.html   # Reusable templates
@@ -399,6 +459,7 @@ HapticCollectionMediaPlayer/
 │
 ├── Content & Data
 │   ├── html_content/             # Your HTML files and assets
+│   ├── config.json               # Selects the active start screen
 │   └── nfc_mappings.json         # Saved mappings (gitignored!)
 │
 └── Libraries

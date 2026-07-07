@@ -1,33 +1,48 @@
 #!/bin/bash
+#
+# HCMP Dependency Installer (Raspberry Pi)
+# ----------------------------------------
+# Installs everything the HCMP needs into the SYSTEM Python.
+#
+# IMPORTANT: Do NOT use a virtual environment on the Pi. The systemd
+# service (hcmp-display.service) runs /usr/bin/python3, so dependencies
+# installed only inside a venv will not be found at boot.
+#
+# This script needs an internet connection. Run it BEFORE the Pi is
+# deployed offline in the exhibition.
+
+set -e
 
 echo "========================================="
-echo "Installing System Packages for NFC System"
+echo "HCMP - Installing Dependencies"
 echo "========================================="
 
-# This script installs packages using apt instead of pip
-# Useful for avoiding virtual environment on Raspberry Pi
+# Make sure we run from the repo directory (so requirements-rpi.txt is found)
+cd "$(dirname "$0")"
 
-echo "Updating package list..."
+echo ""
+echo "[1/3] Updating package list..."
 sudo apt update
 
-echo "Installing Python packages via apt..."
-sudo apt install -y python3-flask python3-serial python3-spidev
-
-echo "Installing RPi.GPIO if not already installed..."
-sudo apt install -y python3-rpi.gpio
-
-# Note: PN532 library might not be available via apt
-# In that case, we'll need to use pip with --break-system-packages
 echo ""
-echo "Some packages might not be available via apt."
-echo "Installing remaining packages with pip..."
-
-# Create a list of packages that might need pip
-pip3 install --break-system-packages adafruit-circuitpython-pn532
+echo "[2/3] Installing system packages (pip, xdotool)..."
+# xdotool is used by kiosk.sh for the automatic first-load refresh
+sudo apt install -y python3-pip xdotool
 
 echo ""
-echo "✅ System packages installed!"
+echo "[3/3] Installing Python packages into system Python..."
+sudo pip3 install --break-system-packages -r requirements-rpi.txt
+
 echo ""
-echo "You can now run the system directly with:"
-echo "  python3 nfc_web_server.py  (in one terminal)"
-echo "  python3 nfc_player.py      (in another terminal)"
+echo "========================================="
+echo "Dependencies installed."
+echo "========================================="
+echo ""
+echo "Next steps:"
+echo "  1. Test the NFC reader:"
+echo "       cd python && python3 example_get_uid.py"
+echo "  2. Map your NFC chips (if needed):"
+echo "       python3 nfc_web_server.py   ->  http://localhost:5000"
+echo "  3. Set up boot-to-display mode:"
+echo "       ./install_autostart.sh"
+echo "========================================="

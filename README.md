@@ -3,282 +3,359 @@ By Lucas Latzel and Nils Schnorr
 
 An interactive NFC-based media display system that presents HTML content when physical objects are placed on a reader. Perfect for museums, exhibitions, interactive art installations, and educational displays.
 
-
 ## 🌟 Overview
 
 This system allows you to:
 - **Map NFC chips to HTML content** using a web interface
 - **Display content automatically** when objects are placed on the reader
 - **Return to home screen** when objects are removed
-- **Run in kiosk mode** for public exhibitions
+- **Boot straight into kiosk mode** for unattended public exhibitions — the Pi survives daily power cuts without any manual intervention
 
-## 🚀 Quick Start
+**How it works in the exhibition:** A visitor places a tagged object on the reader. The PN532 NFC HAT reads the chip's UID, the backend looks it up in `nfc_mappings.json`, and Chromium (running fullscreen in kiosk mode) instantly displays the mapped HTML page. When the object is removed, the display returns to the home screen.
 
-```bash
-# 1. Make scripts executable
-chmod +x make_executable.sh
-./make_executable.sh
+## 🧰 Hardware
 
-# 2. Create NFC mappings
-./start_both.sh
-# Open http://localhost:5000 to map your NFC chips
+### Parts
 
-# 3. Run the display
-./start_display_simple.sh
-```
-
-## 📋 Requirements
-
-### Hardware
-- Raspberry Pi (tested on Pi 3/4)
-- PN532 NFC/RFID reader (UART connection)
-- NFC tags/chips (NTAG, Mifare, etc.)
+- Raspberry Pi 4 (Pi 3 also works)
+- **Waveshare PN532 NFC HAT** (mounted on the Pi's 40-pin GPIO header)
+- NFC tags/chips (NTAG, Mifare, etc.) — one per exhibit object
 - HDMI display
+- microSD card with Raspberry Pi OS (with desktop)
 
-### Software
-- Raspberry Pi OS (or similar Linux)
-- Python 3.6+
-- Web browser (Chromium recommended)
+### Configuring the Waveshare PN532 NFC HAT (UART mode)
 
-## 🔧 Installation
+The software communicates with the PN532 via **UART on `/dev/ttyS0`**, so the HAT must be physically configured for UART mode. **Always power off before changing switches or jumpers.**
 
-### 1. Clone the Repository
-```bash
-cd ~/Documents/GitHub
-git clone https://github.com/NilsSchnorr/HapticCollectionMediaPlayer
-cd HapticCollectionMediaPlayer
-```
+**1. Chip mode jumpers (I0 / I1):** set both to **L**
 
-### 2. Install Dependencies
+| Jumper | Position |
+|--------|----------|
+| I0 | **L** |
+| I1 | **L** |
 
-#### Option A: Virtual Environment (Recommended)
-```bash
-./setup.sh
-```
+**2. DIP switch block:** only **RX** and **TX** ON, everything else OFF
 
-#### Option B: System Packages
-```bash
-./setup_system_packages.sh
-```
+| SCK | MISO | MOSI | NSS | SCL | SDA | RX | TX |
+|-----|------|------|-----|-----|-----|-----|-----|
+| OFF | OFF | OFF | OFF | OFF | OFF | **ON** | **ON** |
 
-### 3. Connect NFC Reader
-Connect your PN532 to the Raspberry Pi:
-- VCC → 3.3V
-- GND → GND
-- TX → RX (GPIO 15)
-- RX → TX (GPIO 14)
+Never set all DIP switches to ON at the same time — the HAT will not communicate correctly.
 
-### 4. Test NFC Reader
-```bash
-cd python
-python3 example_get_uid.py
-```
-Place an NFC chip on the reader - you should see its UID.
+**3. Reset jumper:** connect **RSTPDN → D20** with a jumper cap. The software pulses GPIO 20 to hardware-reset the PN532 on startup (`reset=20` in the code), which makes recovery from a hung reader reliable.
 
-## 📖 User Guide
+**4. Not needed for UART:** the INT0 → D16 jumper (only relevant for I2C mode). Leave it off.
 
-### Tag Management Interface
+**5. Antenna:** the PCB antenna is integrated — nothing to attach. Keep the coil area clear of metal.
 
-The tag management interface allows you to create mappings between NFC chips and HTML files.
+Then seat the HAT firmly on all 40 GPIO pins. The connections are made automatically through the header:
 
-#### Starting the Management Interface
-```bash
-./start_both.sh
-```
-Open http://localhost:5000 in your browser.
+| PN532 HAT | Raspberry Pi |
+|-----------|--------------|
+| 3V3 | 3.3V |
+| GND | GND |
+| TXD | RXD (GPIO 15, physical pin 10) |
+| RXD | TXD (GPIO 14, physical pin 8) |
 
-#### Creating Mappings
-1. **Place an NFC chip** on the reader
-2. The UID will automatically appear in the form
-3. **Select an HTML file** from the dropdown
-4. **Add a description** (optional)
-5. Click **Save Mapping**
+(If you ever wire a PN532 board manually instead of using the HAT, note that TX and RX cross: reader TX → Pi RX and vice versa.)
 
-#### Managing Content
-- **Add HTML files**: Place them in the `html_content/` directory
-- **View mappings**: See all existing mappings in the table
-- **Delete mappings**: Click the Delete button next to any mapping
-- **Test detection**: Use "Test with Random UID" for development
+## 🐣 Raspberry Pi Setup — Fresh Install, Step by Step
 
-Your mappings are saved in `nfc_mappings.json` and persist across restarts.
+> ⚠️ **Offline deployment note:** In the exhibition, the Pi typically has **no internet**. Steps 4–6 require a connection — complete them (and test everything) before the Pi is deployed.
 
-### Display System
+### Step 1: Flash the OS
 
-The display system shows a home screen and automatically displays content when NFC chips are detected.
+Flash **Raspberry Pi OS (with desktop)** using Raspberry Pi Imager. In the imager settings, set the hostname (e.g. `hcmp-pi`), username (e.g. `hcmp`), and Wi-Fi credentials. Boot the Pi with the configured HAT mounted.
 
-#### Starting the Display
-
-**For Development/Testing:**
-```bash
-./start_display_simple.sh
-```
-Opens in a regular browser window (easy to close).
-
-**For Exhibitions/Kiosk Mode:**
-```bash
-./start_display.sh
-```
-Opens in fullscreen kiosk mode (ESC to exit).
-
-**Demo Mode (No NFC Hardware):**
-```bash
-./start_demo.sh
-```
-Use buttons or keys 1-3 to simulate chips.
-
-#### Disabling Screen Blanking (Important for Exhibitions)
-
-By default, Raspberry Pi OS will blank the screen after a period of inactivity. Since the HCMP runs without keyboard or mouse input, the OS thinks it's idle and may turn off the display. The `start_display.sh` script already attempts to disable this via `xset` and `setterm` commands, but you should **also** disable it at the OS level to be safe:
+### Step 2: Enable UART, disable the serial console
 
 ```bash
 sudo raspi-config
 ```
-Navigate to **Display Options → Screen Blanking → No**.
 
-This ensures the display stays on indefinitely, even across reboots.
+Navigate to **Interface Options → Serial Port** and answer:
 
-#### How It Works
-1. **Home Screen**: Shows "Haptic Collection Media Player" with animated NFC icon
-2. **Chip Detected**: Instantly displays the mapped HTML content
-3. **Chip Removed**: Returns to the home screen
-4. **Unknown Chips**: Shows "Unknown chip" message
+1. *"Would you like a login shell to be accessible over serial?"* → **No**
+2. *"Would you like the serial port hardware to be enabled?"* → **Yes**
 
-#### Display Features
-- Smooth transitions between content
-- Full-screen HTML display
-- Animated home screen
-- Real-time chip detection
-- No user interaction needed
+This exact combination is critical. A login shell bound to the serial port is the single most common reason the PN532 stays silent.
 
-#### Exiting Kiosk Mode
-- **ESC** or **F11** - Exit fullscreen
-- **Alt + F4** - Close window
-- **Ctrl + C** - Stop from terminal
+Before rebooting, verify (paths are `/boot/firmware/` on current OS versions, `/boot/` on older ones):
 
-### Autostart (Museum / Exhibition Mode)
+```bash
+grep enable_uart /boot/firmware/config.txt   # must show: enable_uart=1
+cat /boot/firmware/cmdline.txt               # must NOT contain: console=serial0,115200
+```
 
-For unattended installations where the Pi should boot directly into display mode — for example in a museum where staff simply turn on the power each morning — you can set up autostart. This makes the HCMP launch automatically every time the Pi boots, with no keyboard or mouse interaction required.
+Then reboot:
 
-#### What It Does
+```bash
+sudo reboot
+```
 
-The autostart installer sets up two things:
+### Step 3: Verify the serial device
 
-1. **A systemd service** that starts the NFC display backend (`nfc_display.py`) early in the boot process. This is the Python server that talks to the NFC reader and serves content on port 8080.
-2. **A desktop autostart entry** that opens Chromium in fullscreen kiosk mode once the graphical desktop is ready, pointed at `http://localhost:8080`. It also disables screen blanking at the X11 level.
+```bash
+ls -l /dev/ttyS0 /dev/serial0
+```
 
-Additionally, it enables desktop auto-login and disables screen blanking via `raspi-config`.
+`/dev/ttyS0` should exist, with `/dev/serial0` symlinked to it. Also confirm your user is in the `dialout` group (`groups` — it is by default on Raspberry Pi OS).
 
-#### Installing Autostart
+### Step 4: Clone the repository
+
+```bash
+mkdir -p ~/Documents/Github
+cd ~/Documents/Github
+git clone https://github.com/NilsSchnorr/HapticCollectionMediaPlayer.git
+cd HapticCollectionMediaPlayer
+```
+
+### Step 5: Copy the files git doesn't bring
+
+Two kinds of files are **gitignored** and must be copied from an existing unit (or your development machine), e.g. via `scp` or USB stick:
+
+- `nfc_mappings.json` — the chip-to-content mappings (skip if this unit gets freshly mapped chips)
+- Large media files, e.g. videos in `html_content/videos/`
+
+Example from another machine on the same network:
+
+```bash
+scp /path/to/nfc_mappings.json hcmp@hcmp-pi.local:~/Documents/Github/HapticCollectionMediaPlayer/
+```
+
+### Step 6: Install dependencies
+
+```bash
+chmod +x make_executable.sh && ./make_executable.sh
+./setup_system_packages.sh
+```
+
+This installs `xdotool` plus all Python packages from `requirements-rpi.txt` into the **system Python**.
+
+> ⚠️ Do **not** use a virtual environment on the Pi. The autostart service runs `/usr/bin/python3` — dependencies installed only in a venv will fail at boot. (`requirements.txt` without the `-rpi` suffix is for development machines and lacks the Pi-specific packages.)
+
+### Step 7: Test the NFC hardware
+
+```bash
+cd python
+python3 example_get_uid.py
+```
+
+Place a tag on the HAT — its UID should print. If not, see [Troubleshooting](#%EF%B8%8F-troubleshooting) before continuing. Return to the repo root afterwards (`cd ..`).
+
+### Step 8: Map your NFC chips (if needed)
+
+If you copied a valid `nfc_mappings.json` for the same physical objects in Step 5, skip this. For new chips:
+
+```bash
+python3 nfc_web_server.py
+```
+
+Open http://localhost:5000, place each chip on the reader, assign an HTML file, save. Stop with Ctrl+C when done. (See [Tag Management Interface](#tag-management-interface) for details.)
+
+### Step 9: Install autostart
 
 ```bash
 ./install_autostart.sh
 ```
 
-The script will ask for confirmation, then set everything up. At the end it offers to reboot so you can test it immediately.
+Sets up everything for unattended operation (see [Autostart](#-autostart-museum--exhibition-mode)). Accept the reboot at the end.
 
-After a reboot, the boot sequence is:
+### Step 10: The acceptance test
 
-1. Pi powers on and boots the OS
-2. Auto-login to the desktop (no password prompt)
-3. systemd starts the NFC display backend
-4. Chromium opens in fullscreen kiosk mode
-5. The "Place an object on the reader" home screen appears
+After the reboot the Pi should come up on its own: auto-login → backend starts → Chromium opens fullscreen showing the home screen. Then the real museum test: **pull the power plug, plug it back in**, and confirm the whole chain comes up again without touching anything. If that works, the unit is deployment-ready.
 
-No user interaction needed at any point.
+## 📖 User Guide
 
-#### Making Changes While Autostart Is Active
+### Tag Management Interface
 
-When the Pi boots into display mode and you need to make changes (edit mappings, update HTML files, etc.), you don't need to uninstall autostart. Just open a terminal and stop the service:
+The mapping interface links NFC chip UIDs to HTML files.
+
+**If autostart is installed, stop the display backend first** — it holds the NFC serial port exclusively:
 
 ```bash
 sudo systemctl stop hcmp-display
 ```
 
-Then close Chromium (Alt+F4) and do your thing. When you're done, either reboot (autostart takes over) or restart manually:
+Then start the interface:
+
+```bash
+python3 nfc_web_server.py
+```
+
+Open http://localhost:5000 in a browser:
+
+1. **Place an NFC chip** on the reader — its UID appears in the form automatically
+2. **Select an HTML file** from the dropdown
+3. **Add a description** (optional)
+4. Click **Save Mapping**
+
+You can also view all mappings, delete mappings, and test with a random UID for development. Mappings are saved in `nfc_mappings.json` and persist across restarts. **Back this file up** — it is gitignored and exists only on the device.
+
+When you're done, Ctrl+C the interface and restart the display backend (or just reboot):
 
 ```bash
 sudo systemctl start hcmp-display
 ```
 
-#### Removing Autostart
+### Display System
 
-To go back to normal boot behavior:
+**Normal operation is autostart** — the Pi boots straight into display mode with no interaction (see below).
+
+**Manual operation** (during setup, or with autostart uninstalled):
+
+```bash
+python3 nfc_display.py    # backend, in one terminal
+./kiosk.sh                # fullscreen kiosk browser, in another
+```
+
+**Windowed mode for development** (easy to close):
+
+```bash
+./start_display_simple.sh
+```
+
+**Demo mode — no NFC hardware needed** (e.g. for previewing content on a laptop):
+
+```bash
+./start_demo.sh
+```
+
+Use the on-screen buttons or keys 1–3 to simulate chips, 0/ESC to simulate removal.
+
+#### How it works
+
+1. **Home screen** shows the animated "place an object" prompt
+2. **Chip detected** → the mapped HTML content displays instantly, edge to edge
+3. **Chip removed** → back to the home screen
+4. **Unknown chip** → "Unknown chip" message with the UID (useful for finding unmapped tags)
+
+#### Exiting kiosk mode
+
+- **Alt + F4** — close the browser window
+- **Ctrl + C** in the terminal (manual mode) — stop the backend
+
+### Adding Content
+
+- Place HTML files in the `html_content/` directory — full HTML/CSS/JavaScript support
+- Put shared assets (images, videos, JS, 3D models) in subdirectories, e.g. `html_content/images/`, `html_content/videos/`
+- Content displays edge-to-edge in an iframe served from `http://localhost:8080/content/<file>`
+- Map new files to chips via the Tag Management Interface
+
+## 🚀 Autostart (Museum / Exhibition Mode)
+
+For unattended installations where staff simply turn on the power each morning.
+
+### What `install_autostart.sh` does
+
+1. **Installs a systemd service** (`hcmp-display`) that starts the NFC display backend (`nfc_display.py`) at boot — this is the Python server that talks to the reader and serves content on port 8080
+2. **Registers the kiosk launcher** (`kiosk.sh`) in three autostart mechanisms — LXDE, XDG, and labwc — so it works on both X11 desktops and newer Wayland-based Raspberry Pi OS images. A file lock inside `kiosk.sh` guarantees only one kiosk instance ever launches, no matter how many mechanisms fire
+3. **Disables screen blanking** (via raspi-config and `xset`)
+4. **Enables desktop auto-login**
+
+`kiosk.sh` itself waits for the backend to respond (up to 60 s), picks the right Chromium binary, launches it fullscreen, and — via `xdotool` — sends a single automatic F5 shortly after launch to work around Chromium's blank first paint on cold boot.
+
+The installer is **safe to re-run** at any time (e.g. after a `git pull`): it replaces its own entries between `# --- HCMP START/END ---` markers without duplicating anything.
+
+### Boot sequence after installation
+
+1. Pi powers on and boots the OS
+2. Auto-login to the desktop (no password prompt)
+3. systemd starts the NFC display backend
+4. Chromium opens in fullscreen kiosk mode
+5. The home screen appears — ready for visitors
+
+### Making changes while autostart is active
+
+No need to uninstall anything. Open a terminal and stop the service:
+
+```bash
+sudo systemctl stop hcmp-display
+```
+
+Close Chromium (Alt+F4), do your work (map chips, edit HTML, `git pull`, …), then reboot — or restart manually with `sudo systemctl start hcmp-display`.
+
+### Removing autostart
 
 ```bash
 ./uninstall_autostart.sh
 ```
 
-This removes the systemd service and the Chromium autostart entry. It does not change auto-login or screen blanking settings — adjust those via `sudo raspi-config` if needed.
+Removes the service and all three kiosk autostart entries. Auto-login and screen blanking settings are left as-is (adjust via `sudo raspi-config` if needed).
 
-#### Useful Commands
+### Useful commands
 
 ```bash
 sudo systemctl stop hcmp-display      # Stop the display backend
 sudo systemctl start hcmp-display     # Start the display backend
 sudo systemctl status hcmp-display    # Check if it's running
 sudo journalctl -u hcmp-display -f    # View live logs
+./check_status.sh                     # Overview of everything
+./kiosk.sh                            # Launch the kiosk manually
 ```
 
 ## 🎨 Customization
 
-### Home Screen Appearance
-Edit `nfc_display.py` to customize:
-- Title text and messages
-- Colors and gradients
-- Animation effects
-- NFC icon design
+### Home screen appearance
 
-### HTML Content
-- Place files in `html_content/` directory
-- Full HTML/CSS/JavaScript support
-- Content displays edge-to-edge
-- Can include images, videos, interactive elements
+Edit `nfc_display.py` to customize the title text, colors and gradients, animations, and the NFC icon.
 
-### Example Content Structure
+### Example content structure
+
 ```
 html_content/
-├── welcome.html      # Introduction screen
-├── gallery.html      # Image gallery
-├── video.html        # Video player
-├── interactive.html  # Interactive elements
-└── assets/           # Images, CSS, JS files
+├── hundekopf_video.html   # Exhibit page (video)
+├── zeus.html              # Exhibit page
+├── template_object.html   # Reusable templates
+├── images/                # Shared images
+├── videos/                # Video files (gitignored — copy manually)
+├── models/                # 3D models
+└── js/                    # Shared scripts
 ```
 
 ## 🛠️ Troubleshooting
 
-### Check System Status
+### Check system status
+
 ```bash
 ./check_status.sh
 ```
-Shows what's running and port status.
 
-### Screen Goes Black After a While
-The display turning off is caused by Raspberry Pi OS screen blanking. Make sure you have disabled it:
-1. Run `sudo raspi-config` → **Display Options** → **Screen Blanking** → **No**
-2. Use `start_display.sh` (not `start_display_simple.sh`) — it includes `xset` and `setterm` commands that disable screen blanking at the X11 level.
-3. If using autostart, this is handled automatically by `install_autostart.sh`.
+Shows the service state, running processes, ports, and mappings file.
 
-### NFC Not Detecting
-1. Check hardware connections
-2. Verify reader with: `cd python && python3 example_get_uid.py`
-3. Try `sudo` if permission errors
-4. If you recently closed the web server or another NFC script, the serial port may still be locked. Wait a few seconds and try again — the display script will attempt to flush the serial port on startup.
+### NFC not detecting
 
-### NFC Works in Web Server But Not in Display Mode
-This can happen if the web server (`nfc_web_server.py`) wasn't shut down cleanly, leaving the serial port or PN532 in a bad state. Both scripts now clean up on exit and flush the serial port on startup, but if the issue persists, a reboot will always resolve it.
+Work through these in order — they cover the failure modes by frequency:
 
-### Port Already in Use
-- Management interface uses port 5000
-- Display system uses port 8080
-- Kill existing processes: `pkill -f "8080"`
+1. **Serial console still active** — re-check Step 2 of the setup: the login shell over serial must be **disabled** and `console=serial0,115200` must be gone from `cmdline.txt`. This is the #1 cause on a fresh Pi.
+2. **HAT switches** — DIP switch must be exactly `RX ON, TX ON, all others OFF`; jumpers I0 and I1 both on **L**; RSTPDN→D20 jumper cap in place. Power off before correcting.
+3. **Serial port held by another process** — the display backend (`hcmp-display` service) holds `/dev/ttyS0` exclusively. Stop it before running `nfc_web_server.py` or any test script: `sudo systemctl stop hcmp-display`
+4. **Verify in isolation:** `cd python && python3 example_get_uid.py`
+5. **Leftover port lock after an unclean shutdown** — both main scripts flush the serial port on startup, but if the reader still won't respond, a reboot always resolves it.
 
-### View Logs
+### Garbled or intermittent NFC data
+
+The mini UART's baud rate depends on the core clock. `enable_uart=1` normally pins it, but if you see corruption at 115200, add `core_freq=250` to `config.txt` and reboot.
+
+### White screen after boot
+
+Chromium's first paint can race the desktop compositor on cold boot. `kiosk.sh` fixes this automatically by sending one F5 via `xdotool` a few seconds after launch. If you see a lasting white screen, `xdotool` is probably missing — press F5 once, and install it for next time (`sudo apt install xdotool`, requires internet).
+
+### Screen goes black after a while
+
+Screen blanking must be off. `install_autostart.sh` handles this, but to check manually: `sudo raspi-config` → **Display Options → Screen Blanking → No**.
+
+### Port already in use
+
+- Mapping interface: port **5000**
+- Display system: port **8080**
+
+`./check_status.sh` shows what's holding them.
+
+### View logs
+
 ```bash
-# If running via autostart service
 sudo journalctl -u hcmp-display -f
-
-# If running in background
-tail -f nfc_player.log
 ```
 
 ## 📁 Project Structure
@@ -286,66 +363,51 @@ tail -f nfc_player.log
 ```
 HapticCollectionMediaPlayer/
 ├── Core System
-│   ├── nfc_display.py            # Main display system
-│   ├── nfc_web_server.py         # Management interface
-│   └── web_interface/            # Web UI files
+│   ├── nfc_display.py            # Display backend (port 8080)
+│   ├── nfc_web_server.py         # Tag mapping interface (port 5000)
+│   └── web_interface/            # Mapping interface UI files
 │
-├── Startup Scripts
-│   ├── start_display.sh          # Manual kiosk mode
-│   ├── start_display_simple.sh   # Manual window mode
-│   ├── start_both.sh             # Management tools
-│   └── start_demo.sh             # Demo mode
+├── Setup
+│   ├── setup_system_packages.sh  # Dependency installer (system Python)
+│   ├── requirements-rpi.txt      # Python packages (Raspberry Pi)
+│   ├── requirements.txt          # Python packages (development machines)
+│   └── make_executable.sh        # chmod helper
 │
 ├── Autostart
 │   ├── install_autostart.sh      # Set up boot-to-display
 │   ├── uninstall_autostart.sh    # Remove autostart
+│   ├── kiosk.sh                  # Chromium kiosk launcher
 │   └── hcmp-display.service      # systemd service template
 │
+├── Development Helpers
+│   ├── start_display_simple.sh   # Windowed mode
+│   ├── start_demo.sh             # Demo mode (no NFC hardware)
+│   ├── nfc_display_demo.py       # Demo backend
+│   └── check_status.sh           # System status overview
+│
 ├── Content & Data
-│   ├── html_content/             # Your HTML files
-│   └── nfc_mappings.json         # Saved mappings
+│   ├── html_content/             # Your HTML files and assets
+│   └── nfc_mappings.json         # Saved mappings (gitignored!)
 │
 └── Libraries
-    └── python/                   # PN532 drivers
+    └── python/                   # PN532 drivers + hardware test scripts
 ```
-
-## 🎯 Common Use Cases
-
-### Museum Exhibition
-1. Create HTML pages for each exhibit
-2. Attach NFC tags to physical objects
-3. Map tags to relevant content
-4. Run `./install_autostart.sh` for hands-free operation
-5. Staff just need to turn on the power each day
-
-### Interactive Art Installation
-1. Embed NFC chips in art pieces
-2. Create immersive HTML experiences
-3. Hide the reader under a surface
-4. Let visitors discover content naturally
-
-### Educational Display
-1. Tag learning materials
-2. Create educational HTML content
-3. Students tap objects to learn more
-4. Track which content is most popular
 
 ## 💡 Tips
 
-- **Backup your mappings**: Copy `nfc_mappings.json` regularly
-- **Test content first**: Use demo mode to preview
-- **Optimize for display**: Design HTML for your screen resolution
-- **Use unique chips**: Each NFC chip needs a unique UID
-- **Hide the reader**: Can work through thin materials
-- **Disable screen blanking**: Run `sudo raspi-config` → Display Options → Screen Blanking → No (see [Disabling Screen Blanking](#disabling-screen-blanking-important-for-exhibitions))
-- **Museum setup**: Use `./install_autostart.sh` so the display starts automatically on power-on (see [Autostart](#autostart-museum--exhibition-mode))
+- **Back up `nfc_mappings.json`** — it is gitignored and lives only on the device
+- **Test content first** with demo mode (`./start_demo.sh`) — works on any machine, no hardware needed
+- **Optimize for your display** — design HTML for the exhibition screen's resolution
+- **Deploying multiple units?** Cloning the SD card of a working Pi is the fastest and safest path
+- **Everything internet-dependent happens before deployment** — clone, dependencies, xdotool; the exhibition Pi is offline
+- **The reader works through thin materials** — it can be hidden under a surface
 
 ## 🔒 Security Note
 
 This system is designed for local networks and trusted environments. For public installations:
-- Run on isolated network
+- Run on an isolated network
 - Restrict file system access
-- Use read-only file system
+- Use a read-only file system
 - Disable unnecessary services
 
 ## 📄 License

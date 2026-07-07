@@ -7,6 +7,7 @@ chmod +x check_status.sh
 chmod +x install_autostart.sh
 chmod +x uninstall_autostart.sh
 chmod +x kiosk.sh
+chmod +x tag_mode.sh
 chmod +x start_display_simple.sh
 chmod +x start_demo.sh
 chmod +x make_executable.sh

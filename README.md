@@ -151,7 +151,7 @@ If you copied a valid `nfc_mappings.json` for the same physical objects in Step 
 python3 nfc_web_server.py
 ```
 
-Open http://localhost:5000, place each chip on the reader, assign an HTML file, save. Stop with Ctrl+C when done. (See [Tag Management Interface](#tag-management-interface) for details.)
+Open http://localhost:5000, place each chip on the reader, assign an HTML file, save. Stop with Ctrl+C when done. (Once autostart is installed in the next step, use `./tag_mode.sh` for future mapping sessions instead — it handles stopping and restarting the backend for you.)
 
 ### Step 9: Install autostart
 
@@ -171,31 +171,40 @@ After the reboot the Pi should come up on its own: auto-login → backend starts
 
 The mapping interface links NFC chip UIDs to HTML files.
 
-**If autostart is installed, stop the display backend first** — it holds the NFC serial port exclusively:
+#### The easy way: tag mode
 
 ```bash
-sudo systemctl stop hcmp-display
+./tag_mode.sh
 ```
 
-Then start the interface:
+One command handles the whole switch out of exhibition mode: it closes the kiosk browser (pressing Alt+F4 first also works, but isn't required), stops the display backend to free the NFC reader, starts the mapping interface, and opens a browser window at http://localhost:5000.
 
-```bash
-python3 nfc_web_server.py
-```
-
-Open http://localhost:5000 in a browser:
+In the browser:
 
 1. **Place an NFC chip** on the reader — its UID appears in the form automatically
 2. **Select an HTML file** from the dropdown
 3. **Add a description** (optional)
 4. Click **Save Mapping**
 
-You can also view all mappings, delete mappings, and test with a random UID for development. Mappings are saved in `nfc_mappings.json` and persist across restarts. **Back this file up** — it is gitignored and exists only on the device.
+You can also view all mappings, delete mappings, and test with a random UID for development.
 
-When you're done, Ctrl+C the interface and restart the display backend (or just reboot):
+When you're done, press **Ctrl+C** in the terminal. The script asks whether to return to exhibition mode:
+
+- **y** → restarts the backend and relaunches the fullscreen kiosk — no reboot needed
+- **n** → stays on the desktop (e.g. to edit HTML files). Return later with `sudo systemctl start hcmp-display && ./kiosk.sh`, or simply reboot.
+
+Mappings are saved in `nfc_mappings.json` and persist across restarts. **Back this file up** — it is gitignored and exists only on the device.
+
+#### The manual way
+
+The same steps by hand (this is exactly what `tag_mode.sh` automates):
 
 ```bash
-sudo systemctl start hcmp-display
+sudo systemctl stop hcmp-display   # free the NFC serial port
+python3 nfc_web_server.py          # then open http://localhost:5000
+# ... map chips, Ctrl+C when done ...
+sudo systemctl start hcmp-display  # restore the backend
+./kiosk.sh                         # restore the fullscreen display
 ```
 
 ### Display System
@@ -234,6 +243,7 @@ Use the on-screen buttons or keys 1–3 to simulate chips, 0/ESC to simulate rem
 
 - **Alt + F4** — close the browser window
 - **Ctrl + C** in the terminal (manual mode) — stop the backend
+- `./tag_mode.sh` — switch straight into the tag mapping interface
 
 ### Adding Content
 
@@ -267,13 +277,13 @@ The installer is **safe to re-run** at any time (e.g. after a `git pull`): it re
 
 ### Making changes while autostart is active
 
-No need to uninstall anything. Open a terminal and stop the service:
+No need to uninstall anything. For **tag mapping**, `./tag_mode.sh` automates the whole cycle (see above). For anything else (editing HTML, `git pull`, …), open a terminal and stop the service:
 
 ```bash
 sudo systemctl stop hcmp-display
 ```
 
-Close Chromium (Alt+F4), do your work (map chips, edit HTML, `git pull`, …), then reboot — or restart manually with `sudo systemctl start hcmp-display`.
+Close Chromium (Alt+F4), do your work, then reboot — or restart manually with `sudo systemctl start hcmp-display`.
 
 ### Removing autostart
 
@@ -286,6 +296,7 @@ Removes the service and all three kiosk autostart entries. Auto-login and screen
 ### Useful commands
 
 ```bash
+./tag_mode.sh                         # Switch to tag mapping and back
 sudo systemctl stop hcmp-display      # Stop the display backend
 sudo systemctl start hcmp-display     # Start the display backend
 sudo systemctl status hcmp-display    # Check if it's running
@@ -329,7 +340,7 @@ Work through these in order — they cover the failure modes by frequency:
 
 1. **Serial console still active** — re-check Step 2 of the setup: the login shell over serial must be **disabled** and `console=serial0,115200` must be gone from `cmdline.txt`. This is the #1 cause on a fresh Pi.
 2. **HAT switches** — DIP switch must be exactly `RX ON, TX ON, all others OFF`; jumpers I0 and I1 both on **L**; RSTPDN→D20 jumper cap in place. Power off before correcting.
-3. **Serial port held by another process** — the display backend (`hcmp-display` service) holds `/dev/ttyS0` exclusively. Stop it before running `nfc_web_server.py` or any test script: `sudo systemctl stop hcmp-display`
+3. **Serial port held by another process** — the display backend (`hcmp-display` service) holds `/dev/ttyS0` exclusively. Stop it before running `nfc_web_server.py` or any test script: `sudo systemctl stop hcmp-display` (or just use `./tag_mode.sh`, which handles this)
 4. **Verify in isolation:** `cd python && python3 example_get_uid.py`
 5. **Leftover port lock after an unclean shutdown** — both main scripts flush the serial port on startup, but if the reader still won't respond, a reboot always resolves it.
 
@@ -365,6 +376,7 @@ HapticCollectionMediaPlayer/
 ├── Core System
 │   ├── nfc_display.py            # Display backend (port 8080)
 │   ├── nfc_web_server.py         # Tag mapping interface (port 5000)
+│   ├── tag_mode.sh               # Switch between kiosk and tag mapping
 │   └── web_interface/            # Mapping interface UI files
 │
 ├── Setup

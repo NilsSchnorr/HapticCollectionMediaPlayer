@@ -90,6 +90,7 @@ sleep 3
 # -----------------------------------------
 "$BROWSER" --kiosk --noerrdialogs --disable-infobars \
     --disable-session-crashed-bubble --disable-restore-session-state \
+    --autoplay-policy=no-user-gesture-required \
     "$URL" &
 BROWSER_PID=$!
 

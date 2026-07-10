@@ -156,6 +156,16 @@
             padding-top: 1.4vh;
         }
 
+        .footer-logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(1.6rem, 4vw, 3.2rem);
+            margin-bottom: 1vh;
+        }
+        .footer-logos img { height: clamp(22px, 3vh, 34px); width: auto; display: block; }
+        .footer-logos img.novus { height: clamp(28px, 3.8vh, 42px); }
+
         .footer-line {
             font-size: clamp(0.65rem, 1.4vh, 0.95rem);
             letter-spacing: 0.35em;
@@ -195,7 +205,12 @@
     </main>
 
     <footer>
-        <div class="footer-line">Universit&auml;t des Saarlandes &middot; Vicus Wareswald &middot; Anno MMXXVI</div>
+        <div class="footer-logos">
+            <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+            <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+            <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
+        </div>
+
     </footer>
 
     <script>

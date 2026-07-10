@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mediaplayer Teil 2: Haarnadel</title>
+<style>
+:root {
+  --olive-dark: #283618;
+  --olive: #606c38;
+  --olive-soft: #a3b18a;
+  --cream: #f6f1e7;
+  --paper: #fffaf0;
+  --bronze: #bc6c25;
+  --ink: #1f2418;
+  --wrong: #8f2f24;
+  --line: rgba(40, 54, 24, 0.16);
+}
+* { box-sizing: border-box; }
+html { font-size: 18px; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, rgba(40, 54, 24, 0.92), rgba(96, 108, 56, 0.86)),
+    radial-gradient(circle at top left, rgba(188, 108, 37, 0.22), transparent 38%),
+    var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.7;
+}
+main {
+  width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+.page {
+  overflow: hidden;
+  border: 1px solid rgba(255, 250, 240, 0.34);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px rgba(12, 18, 8, 0.35);
+}
+
+/* Utility bar (accessibility) */
+.utilitybar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--olive-dark);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+}
+.utilitybar span { opacity: 0.85; }
+.utilitybar button {
+  min-width: 40px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border: 1px solid rgba(246, 241, 231, 0.5);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cream);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.utilitybar button:hover { background: rgba(246, 241, 231, 0.15); }
+
+.hero {
+  min-height: 420px;
+  display: grid;
+  align-items: end;
+  padding: 34px;
+  color: var(--cream);
+  background:
+    linear-gradient(180deg, rgba(40, 54, 24, 0.20), rgba(40, 54, 24, 0.88)),
+    url("assets/mosaik-hausherrin-ankleidezimmer.jpg") center / cover,
+    linear-gradient(135deg, #4f5f2b, #283618);
+}
+.hero h1 {
+  max-width: none;
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 4.2rem);
+  font-weight: 700;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.content { padding: clamp(24px, 4vw, 64px); }
+
+.lead {
+  margin: 0 0 24px;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  color: var(--olive-dark);
+}
+.intro {
+  margin: 0 0 14px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--olive);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+}
+.intro .lead { margin: 0 0 12px; }
+.intro p:last-child { margin-bottom: 0; }
+.content h2 {
+  margin: 40px 0 14px;
+  color: var(--olive-dark);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.15;
+}
+.content h3 {
+  margin: 30px 0 12px;
+  color: var(--olive-dark);
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  line-height: 1.2;
+}
+.content p { margin: 0 0 18px; }
+a { color: var(--bronze); font-weight: 700; }
+
+/* Figures */
+.text-image {
+  margin: 28px 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+  box-shadow: 0 10px 26px rgba(40, 54, 24, 0.10);
+}
+.text-image img {
+  width: 100%;
+  max-height: 520px;
+  display: block;
+  object-fit: contain;
+  background: #fbf7ec;
+}
+.text-image figcaption {
+  padding: 12px 16px 14px;
+  color: var(--olive-dark);
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Text + Bild nebeneinander */
+.media-split {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: start;
+  margin: 34px 0;
+}
+.media-split .media-text > :first-child { margin-top: 0; }
+.media-split .media-text > :last-child { margin-bottom: 0; }
+.media-split .text-image { margin: 0; }
+.media-split .text-image img { max-height: 600px; }
+.media-split--rev .media-text { order: 2; }
+.media-split--rev .text-image { order: 1; }
+@media (max-width: 900px) {
+  .media-split { grid-template-columns: 1fr; }
+  .media-split--rev .media-text,
+  .media-split--rev .text-image { order: 0; }
+}
+
+/* 3D object block */
+.object3d {
+  margin: 34px 0 40px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.model3d { margin: 0; }
+.model3d-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 38%, #fffdf6 0%, #f3ecdb 60%, #e7ddc6 100%);
+  box-shadow: 0 12px 30px rgba(40, 54, 24, 0.14);
+  touch-action: none;
+}
+.model3d-canvas { position: absolute; inset: 0; }
+.model3d-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+.model3d-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 400ms ease;
+}
+.model3d-fallback img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.model3d-stage.is-loaded .model3d-fallback { opacity: 0; pointer-events: none; }
+.model3d-note {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: none;
+  max-width: calc(100% - 28px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(40, 54, 24, 0.82);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.model3d-stage.is-fallback .model3d-note { display: block; }
+.model3d-spinner {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(40, 54, 24, 0.82);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+}
+.model3d-spinner .dot {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(246, 241, 231, 0.35);
+  border-top-color: var(--cream);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.model3d-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: Arial, sans-serif;
+}
+.model3d-hint {
+  margin: 12px 0 0;
+  color: var(--olive-dark);
+  font-family: Arial, sans-serif;
+  font-size: 0.92rem;
+  opacity: 0.85;
+}
+
+/* Steckbrief / fact panel */
+.steckbrief {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+  padding: 22px 24px;
+  font-family: Arial, sans-serif;
+}
+.steckbrief h3 {
+  margin: 0 0 14px;
+  color: var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+}
+.steckbrief dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; }
+.steckbrief dt { color: var(--olive); font-weight: 700; }
+.steckbrief dd { margin: 0; color: var(--ink); }
+
+/* Buttons */
+.button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--olive);
+  border-radius: 8px;
+  background: var(--olive);
+  color: var(--cream);
+  font: inherit;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button:hover { background: var(--olive-dark); border-color: var(--olive-dark); }
+.button.secondary { background: transparent; color: var(--olive-dark); }
+.button.secondary:hover { background: rgba(96, 108, 56, 0.12); }
+
+/* Empress cards */
+.section-title {
+  margin: 40px 0 8px;
+  color: var(--olive-dark);
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+.empress-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0 8px;
+  font-family: Arial, sans-serif;
+}
+.empress-card {
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+  color: var(--olive-dark);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+.empress-card:hover,
+.empress-card:focus-visible,
+.empress-card.is-active {
+  transform: translateY(-2px);
+  border-color: rgba(188, 108, 37, 0.6);
+  box-shadow: 0 14px 30px rgba(40, 54, 24, 0.18);
+}
+.empress-image {
+  width: 100%;
+  height: 200px;
+  display: block;
+  object-fit: cover;
+  background: #fbf7ec;
+}
+.empress-card strong { display: block; padding: 12px 14px 14px; font-size: 1rem; }
+.empress-info {
+  display: none;
+  margin: 16px 0 8px;
+  padding: 20px 22px;
+  border-left: 4px solid var(--olive);
+  border-radius: 0 10px 10px 0;
+  background: rgba(163, 177, 138, 0.16);
+  font-family: Arial, sans-serif;
+}
+.empress-info.is-open { display: block; }
+.empress-info strong { display: block; margin-bottom: 8px; color: var(--olive-dark); }
+
+/* Quiz */
+.quiz, .matching {
+  margin-top: 44px;
+  padding-top: 30px;
+  border-top: 2px solid rgba(96, 108, 56, 0.22);
+  font-family: Arial, sans-serif;
+}
+.quiz h2, .matching h2 {
+  margin: 0 0 8px;
+  color: var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+.quiz > p, .matching > p { margin: 0 0 18px; }
+.quiz-card {
+  margin: 14px 0;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbf7ec;
+  box-shadow: 0 8px 20px rgba(40, 54, 24, 0.08);
+}
+.quiz-question { margin: 0 0 14px; color: var(--ink); font-size: 1.08rem; font-weight: 700; }
+.quiz-options { margin: 0; display: flex; flex-wrap: wrap; gap: 10px; border: 0; padding: 0; }
+.quiz-options legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.quiz-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.quiz-option input {
+  appearance: none; -webkit-appearance: none;
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  border: 2px solid var(--olive);
+  border-radius: 50%;
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.quiz-option input:checked { background: var(--olive); box-shadow: inset 0 0 0 3px var(--paper); }
+.quiz-option:has(input:checked) { border-color: var(--olive); background: rgba(96, 108, 56, 0.10); font-weight: 700; }
+.quiz-option.is-correct { border-color: var(--olive); background: rgba(96, 108, 56, 0.20); }
+.quiz-option.is-correct input { background: var(--olive); border-color: var(--olive); }
+.quiz-option.is-wrong { border-color: var(--wrong); background: rgba(143, 47, 36, 0.12); }
+.quiz-option.is-wrong input { background: var(--wrong); border-color: var(--wrong); }
+.quiz-status {
+  display: none;
+  margin-top: 14px;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+.quiz-card.is-answered .quiz-status { display: block; }
+.quiz-status.correct { color: var(--olive-dark); }
+.quiz-status.wrong { color: var(--wrong); }
+.quiz-answer {
+  display: none;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--olive);
+  border-radius: 0 8px 8px 0;
+  background: rgba(163, 177, 138, 0.18);
+  color: #303525;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.quiz-card.is-answered .quiz-answer { display: block; }
+
+/* Matching game */
+.match-game {
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbf7ec;
+}
+.match-board { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.match-column h3 {
+  margin: 0 0 12px;
+  color: var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+}
+.match-card {
+  width: 100%;
+  min-height: 50px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.match-card:hover,
+.match-card:focus-visible,
+.match-card.is-selected {
+  transform: translateY(-1px);
+  border-color: var(--bronze);
+  box-shadow: 0 8px 18px rgba(40, 54, 24, 0.14);
+}
+.match-card.ancient { background: #e6dbbd; }
+.match-card.modern { background: #dce7d0; }
+.match-card.is-matched {
+  border-color: var(--olive);
+  background: rgba(96, 108, 56, 0.20);
+  color: var(--olive-dark);
+  cursor: default;
+  transform: none;
+}
+.match-card.is-wrong-flash { border-color: var(--wrong); background: rgba(143, 47, 36, 0.12); }
+.match-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 18px; }
+.match-progress { font-family: Arial, sans-serif; font-weight: 700; color: var(--olive-dark); }
+.match-result {
+  display: none;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--olive);
+  border-radius: 0 8px 8px 0;
+  background: rgba(163, 177, 138, 0.18);
+  font-family: Arial, sans-serif;
+}
+.match-result.is-visible { display: block; }
+
+.closing {
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 2px solid rgba(96, 108, 56, 0.22);
+  font-size: 1.08rem;
+  color: var(--olive-dark);
+}
+
+@media (max-width: 900px) {
+  .object3d { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  main { width: min(100% - 24px, 1080px); padding: 20px 0; }
+  .hero { min-height: 240px; padding: 24px; }
+  .empress-grid { grid-template-columns: 1fr 1fr; }
+  .match-board { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .empress-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main>
+<article class="page">
+
+  <div class="utilitybar">
+    <span>Schriftgröße</span>
+    <button type="button" id="font-down" aria-label="Schrift verkleinern">A−</button>
+    <button type="button" id="font-up" aria-label="Schrift vergrößern">A+</button>
+  </div>
+
+  <header class="hero" aria-label="Themenbereich Hygiene und Kosmetik">
+    <h1>Hygiene und Kosmetik: Haarnadel aus dem Wareswald</h1>
+  </header>
+
+  <section class="content">
+
+    <div class="intro">
+      <p class="lead">Willkommen im Themenbereich „Hygiene und Kosmetik im Vicus Wareswald“</p>
+      <p>Entdecke, wie sich die Menschen im römischen Vicus Wareswald vor fast 2.000 Jahren pflegten und welche Schönheitsideale sie hatten.</p>
+      <p>Auf dieser Seite könnt ihr eine originale Haarnadel als interaktives 3D-Modell von allen Seiten betrachten. Erfahrt mehr darüber, wie römische Frisuren entstanden, welche Trends beliebt waren, wie sich diese verbreitet haben und welche Rolle Haare spielten. Testen Sie Ihr Wissen zum Abschluss in einem kleinen Quiz.</p>
+    </div>
+
+    <div class="media-split">
+      <div class="media-text">
+        <h3>Körperpflege im römischen Alltag</h3>
+        <p>Gepflegte Haare, wohlriechende Öle und kunstvolle Frisuren gehören für viele Menschen zur römischen Alltagskultur. Auch im Vicus Wareswald nutzten die Bewohner Gegenstände zur Körperpflege und zum Schmücken. Die hier gefundenen Objekte erzählen vom Alltag vor fast 2.000 Jahren und zeigen, wie weit römische Lebensgewohnheiten auch in den Nordwesten des Reiches gelangten.</p>
+      </div>
+      <figure class="text-image">
+        <img src="assets/frisierszene-neumagen.jpg" alt="Frisierszene aus Neumagen">
+        <figcaption>Frisierszene aus Neumagen</figcaption>
+      </figure>
+    </div>
+
+    <h2>Haarnadel aus dem Wareswald</h2>
+    <div class="object3d">
+      <figure class="model3d">
+        <div class="model3d-stage" data-model="models/05_Nadel.glb">
+          <div class="model3d-canvas"></div>
+          <div class="model3d-fallback">
+            <img src="assets/nadel-render.png" alt="3D-Modell der Haarnadel aus dem Wareswald">
+          </div>
+          <div class="model3d-spinner" role="status"><span class="dot"></span><span>3D-Modell wird geladen …</span></div>
+          <div class="model3d-note">Vorschau – auf der Station im Museum dreht sich hier das interaktive 3D-Modell.</div>
+        </div>
+        <div class="model3d-controls">
+          <button class="button secondary" type="button" data-action="toggle-rotate" aria-pressed="true">Drehung pausieren</button>
+          <button class="button secondary" type="button" data-action="reset">Ansicht zurücksetzen</button>
+        </div>
+        <p class="model3d-hint">Ziehe mit der Maus oder dem Finger, um die Haarnadel von allen Seiten zu betrachten.</p>
+      </figure>
+      <div class="steckbrief">
+        <h3>Steckbrief</h3>
+        <dl>
+          <dt>Objekt</dt><dd>Haarnadel</dd>
+          <dt>Datierung</dt><dd>2.–3. Jh. n. Chr.</dd>
+          <dt>Material</dt><dd>Knochen</dd>
+          <dt>Fundort</dt><dd>Vicus Wareswald</dd>
+          <dt>Zustand</dt><dd>gut erhalten, kleine Kratzer</dd>
+        </dl>
+      </div>
+    </div>
+    <p>Haarnadeln dienten im römischen Alltag dazu, kunstvolle Frisuren zu befestigen und zu schmücken. Sie waren praktische Gebrauchsgegenstände, konnten aber zugleich den sozialen Status ihrer Trägerin zum Ausdruck bringen. Dieses Exemplar aus Knochen wurde im Vicus Wareswald gefunden und ist trotz kleiner Kratzer gut erhalten.</p>
+
+    <h2>Frisuren</h2>
+    <div class="media-split media-split--rev">
+      <div class="media-text">
+        <p>Haare galten im Römischen Reich als wichtiges Schönheitsmerkmal und Ausdruck des sozialen Status. Frauen investierten viel Zeit, Mühe und Geld in ihre Frisur, denn ein gepflegtes Äußeres stand für Ansehen und gesellschaftliche Zugehörigkeit. Besonders aufwendige Frisuren konnten nur mit der Hilfe einer erfahrenen Friseurin oder einer ornatrix, einer auf das Frisieren spezialisierten Sklavin, angefertigt werden. Die Haartrachten reichten von einfachen Frisuren bis zu kunstvollen Hochsteckfrisuren, waren jedoch stets sorgfältig gestaltet und fest in Form gebracht.</p>
+        <p>Für das Frisieren wurden verschiedene Hilfsmittel benötigt, um die oft aufwendigen Haartrachten dauerhaft in Form zu halten. Eine zentrale Rolle spielten dabei Haarnadeln aus Knochen, Bronze oder Bein, die die Frisuren zusammenhielten. Solche Nadeln wurden auch im Vicus Wareswald gefunden.</p>
+      </div>
+      <figure class="text-image">
+        <img src="assets/verwendung-haarnadel.png" alt="Verwendung einer Haarnadel in einer Frisur">
+        <figcaption>Verwendung einer Haarnadel</figcaption>
+      </figure>
+    </div>
+
+    <div class="media-split">
+      <div class="media-text">
+        <h3>Haarnadeln – kunstvolle Helfer der römischen Frisuren</h3>
+        <p>Aufwendige römische Frisuren entstanden Schritt für Schritt: Das Haar wurde geflochten, gedreht und zu Knoten oder Lockentürmen gelegt. Anschließend fixierte man die einzelnen Strähnen mit Haarnadeln aus Holz, Knochen oder Metall. Dabei wurden die Nadeln ähnlich wie eine Nadel mit Faden durch die Haarpartien geführt und „vernähten“ die Frisur, sodass sie den ganzen Tag hielt. Besonders bei den kunstvollen Frisuren wohlhabender Frauen waren mehrere Haarnadeln nötig, um die aufwendigen Formen zu stabilisieren.</p>
+      </div>
+      <figure class="text-image">
+        <img src="assets/frisur-naehen-haarnadel.png" alt="Schematische Darstellung: Frisur nähen mit Haarnadel">
+        <figcaption>Frisur nähen mit Haarnadel</figcaption>
+      </figure>
+    </div>
+
+    <h2>Mode ging auch ohne Instagram viral</h2>
+    <p>Heute verbreiten sich über Social Media Trends in wenigen Stunden. Im Römischen Reich übernahmen Münzen diese Aufgabe. Millionen Münzen mit den Porträts der Kaiserinnen gelangten in alle Provinzen des Reiches. Was den Stil der Frisuren betrifft, gaben zur Kaiserzeit die Damen des Hofes den Ton an. Aus den lückenlosen Münzserien, die ihre Bildnisse tragen, und aus Porträtköpfen, die oft mit Sicherheit zu identifizieren sind, lassen sich die – bisweilen sehr seltsamen – Veränderungen in der Haarmode deutlich ablesen.</p>
+    <p>Saubere Kleidung gehörte ebenso zu einem gepflegten Erscheinungsbild wie gebadete Haut. Tuniken bestanden meist aus Wolle oder Leinen. Wohlhabende Römerinnen trugen farbige Stoffe, Schmuck und aufwendig verzierte Gewänder. Männliche Römer trugen die weiße Toga, die Ritter mit einem schmalen Purpurstreifen, die Senatoren mit einem breiten Purpurstreifen.</p>
+    <p>Die kunstvollen Frisuren der kaiserlichen Frauen wurden überall gesehen und nachgeahmt. Wer modern sein wollte, orientierte sich an den Frauen des Kaiserhauses.</p>
+
+    <h2 class="section-title">Kaiserinnen und Frisuren</h2>
+    <p>Klicke auf ein Bild, um mehr über die kaiserlichen Frauen und ihre Frisuren zu erfahren.</p>
+    <div class="empress-grid">
+      <button class="empress-card" type="button" data-target="agrippina">
+        <img class="empress-image" src="assets/agrippina-die-aeltere.png" alt="Münze mit Agrippina der Älteren">
+        <strong>Agrippina die Ältere</strong>
+      </button>
+      <button class="empress-card" type="button" data-target="plotina">
+        <img class="empress-image" src="assets/pompeia-plotina.png" alt="Münze mit Kaiserin Pompeia Plotina">
+        <strong>Plotina</strong>
+      </button>
+      <button class="empress-card" type="button" data-target="faustina">
+        <img class="empress-image" src="assets/faustina-i.jpg" alt="Münze mit Faustina der Älteren">
+        <strong>Faustina die Ältere</strong>
+      </button>
+      <button class="empress-card" type="button" data-target="julia">
+        <img class="empress-image" src="assets/julia-domna.png" alt="Münze mit Kaiserin Julia Domna">
+        <strong>Julia Domna</strong>
+      </button>
+    </div>
+    <article class="empress-info" id="agrippina">
+      <strong>Agrippina die Ältere, * 14 v. Chr.; † 18. Oktober 33, Mutter des Kaisers Caligula</strong>
+      <p>Sehr schlichte Frisur, Mittelscheitel, Haare glatt zurückgenommen, kleiner Knoten. Sie steht für das Ideal der frühen Kaiserzeit: Bescheidenheit, Würde und traditionelle römische Tugenden.</p>
+    </article>
+    <article class="empress-info" id="plotina">
+      <strong>Plotina, 98–117 n. Chr., Ehefrau des Kaisers Trajan</strong>
+      <p>Mittelscheitel mit glatt anliegendem Haar. Über der Stirn ein fächerförmiger Aufbau (fan-shaped coiffure), der aus feinen Strähnen oder Flechtwerk besteht. Unter ihr setzte sich ein eleganter, aber kontrollierter Stil durch. Die Frisuren wurden kunstvoller und zeigten die hohe Kunst römischer Friseurinnen (ornatrices).</p>
+    </article>
+    <article class="empress-info" id="faustina">
+      <strong>Faustina die Ältere, Ehefrau des Kaisers Antoninus Pius, * zwischen 97 und 105; † vor dem 24. Oktober 140</strong>
+      <p>Mittelscheitel, geflochtene Zöpfe und Dutt. Flechtfrisuren wurden zum Trend. Die Kombination aus Zöpfen und hochgestecktem Haar symbolisierte Eleganz und Wohlstand und wurde im ganzen Reich nachgeahmt.</p>
+    </article>
+    <article class="empress-info" id="julia">
+      <strong>Julia Domna, † Frühjahr 217, Ehefrau des Kaisers Septimius Severus</strong>
+      <p>Charakteristische Wellen und große Haarfülle; vermutlich teilweise mit Haarteilen oder Perücken ergänzt. Ihre Frisur war eine regelrechte Modeerscheinung. Voluminöse Frisuren galten als Zeichen von Luxus und Prestige. Importierte Perücken und Haarteile ermöglichten besonders eindrucksvolle Stylings.</p>
+    </article>
+
+    <section class="quiz" aria-label="Teste dein Wissen">
+      <h2>Teste dein Wissen!</h2>
+      <p>Wähle eine Antwort aus – du erhältst sofort Rückmeldung.</p>
+
+      <article class="quiz-card" data-correct="wahr">
+        <p class="quiz-question">Bereits in der Antike wurden Haare gefärbt.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-1" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-1" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Schon damals nutzte man pflanzliche und mineralische Färbemittel, um Haare aufzuhellen oder abzudunkeln.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="wahr">
+        <p class="quiz-question">Im Römischen Reich gab es bereits öffentliche Toiletten mit fließendem Wasser.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-2" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-2" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Viele öffentliche Latrinen wurden kontinuierlich mit Wasser gespült.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="wahr">
+        <p class="quiz-question">Römerinnen und Römer nutzten Rötel als Lippenstift.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-3" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-3" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Rötel – ein rotes Mineralpigment – diente unter anderem zum Färben der Lippen.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="falsch">
+        <p class="quiz-question">Römerinnen trugen ausschließlich Perücken aus Tierhaar.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-4" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-4" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Manche trugen Perücken aus importiertem Menschenhaar.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="falsch">
+        <p class="quiz-question">Das Entfernen der Achselhaare war in der Antike nur für Frauen üblich.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-5" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-5" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Sowohl Männer als auch Frauen entfernten ihre Achselhaare.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="falsch">
+        <p class="quiz-question">Die Römer benutzten Seife zum täglichen Waschen ihres Körpers.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-6" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-6" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Meist reinigten sie ihre Haut mit Öl und einem Strigilis, einem gebogenen Metallschaber.</p></div>
+      </article>
+
+      <article class="quiz-card" data-correct="falsch">
+        <p class="quiz-question">Alle Römer trugen nur weiße Kleidung.</p>
+        <fieldset class="quiz-options">
+          <legend>Antwort auswählen</legend>
+          <label class="quiz-option"><input type="radio" name="frage-7" value="wahr"> Wahr</label>
+          <label class="quiz-option"><input type="radio" name="frage-7" value="falsch"> Falsch</label>
+        </fieldset>
+        <p class="quiz-status"></p>
+        <div class="quiz-answer"><p>Wohlhabende Römerinnen und Römer trugen durchaus farbige Stoffe und Purpurstreifen als Zeichen ihres Standes.</p></div>
+      </article>
+    </section>
+
+    <section class="matching" aria-label="Beauty damals vs. heute">
+      <h2>Beauty damals vs. heute</h2>
+      <p>Klicke zuerst auf einen antiken Begriff und dann auf das passende moderne Produkt.</p>
+      <div class="match-game">
+        <div class="match-board">
+          <div class="match-column">
+            <h3>Antike Mittel</h3>
+            <button class="match-card ancient" type="button" data-match="foundation">Bleiweiß</button>
+            <button class="match-card ancient" type="button" data-match="nagellack">Henna</button>
+            <button class="match-card ancient" type="button" data-match="kajal">Stibium</button>
+            <button class="match-card ancient" type="button" data-match="parfuem">Rosenöl</button>
+            <button class="match-card ancient" type="button" data-match="bodylotion">Salböl</button>
+            <button class="match-card ancient" type="button" data-match="antipickelcreme">Honig</button>
+          </div>
+          <div class="match-column">
+            <h3>Heute</h3>
+            <button class="match-card modern" type="button" data-match="kajal">Kajal</button>
+            <button class="match-card modern" type="button" data-match="foundation">Foundation</button>
+            <button class="match-card modern" type="button" data-match="parfuem">Parfüm</button>
+            <button class="match-card modern" type="button" data-match="antipickelcreme">Antipickelcreme</button>
+            <button class="match-card modern" type="button" data-match="nagellack">Nagellack</button>
+            <button class="match-card modern" type="button" data-match="bodylotion">Bodylotion</button>
+          </div>
+        </div>
+        <div class="match-actions">
+          <button class="button secondary" type="button" id="reset-matches">Zurücksetzen</button>
+          <span class="match-progress" id="match-progress">0 / 6 Paaren gefunden</span>
+        </div>
+        <div class="match-result" id="match-result"></div>
+      </div>
+    </section>
+
+    <p class="closing">Die Haarnadel und das Salbgefäß zeigen, dass die Bewohnerinnen und Bewohner des Vicus Wareswald an den Lebensgewohnheiten des Römischen Reiches teilhatten. Körperpflege, Düfte und modische Frisuren waren nicht nur in den großen Städten verbreitet, sondern gehörten auch in einer kleineren Siedlung wie dem Wareswald zum Alltag.</p>
+
+  </section>
+</article>
+</main>
+
+<!-- Three.js – lokale Kopien für den Offline-Betrieb (MIT License, © three.js authors) -->
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/DRACOLoader.js"></script>
+<script src="js/draco-setup.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script>
+/* ---------- 3D-Viewer (Three.js, offline) ---------- */
+(function () {
+  var RAD_PER_SEC = 0.4; // langsame Auto-Rotation (~16 s pro Umdrehung)
+
+  function showFallback(stage) {
+    var spinner = stage.querySelector(".model3d-spinner");
+    if (spinner) spinner.style.display = "none";
+    stage.classList.add("is-fallback");
+  }
+
+  function initStage(stage) {
+    if (!window.THREE || !THREE.WebGLRenderer) { showFallback(stage); return; }
+    var modelPath = stage.getAttribute("data-model");
+    var canvasWrap = stage.querySelector(".model3d-canvas");
+    var spinner = stage.querySelector(".model3d-spinner");
+
+    var width = stage.clientWidth || 600;
+    var height = stage.clientHeight || 450;
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 2000);
+    camera.position.set(0, 0, 4);
+
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+    catch (e) { showFallback(stage); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0);
+    if ("outputEncoding" in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+    if (THREE.ACESFilmicToneMapping) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15; }
+    canvasWrap.appendChild(renderer.domElement);
+
+    // Weiches Umgebungslicht, damit die texturierten Modelle nicht zu dunkel wirken
+    try {
+      var pmrem = new THREE.PMREMGenerator(renderer);
+      var envScene = new THREE.Scene();
+      envScene.background = new THREE.Color(0xffffff);
+      envScene.add(new THREE.Mesh(
+        new THREE.SphereGeometry(12, 24, 12),
+        new THREE.MeshBasicMaterial({ color: 0xf3ecdb, side: THREE.BackSide })
+      ));
+      var glow = new THREE.Mesh(
+        new THREE.SphereGeometry(3, 16, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      glow.position.set(6, 7, 4);
+      envScene.add(glow);
+      scene.environment = pmrem.fromScene(envScene, 0.08).texture;
+      pmrem.dispose();
+    } catch (e) { /* funktioniert auch ohne Umgebungslicht */ }
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xbfb79a, 0.7));
+    var key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(4, 6, 5); scene.add(key);
+    var fill = new THREE.DirectionalLight(0xffffff, 0.45); fill.position.set(-5, 2, -4); scene.add(fill);
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+
+    var rotator = null;       // Pivot-Gruppe, dreht sich um den Objektmittelpunkt
+    var autoRotate = true;
+    var userInteracting = false;
+    var startDist = 4;
+    var clock = new THREE.Clock();
+
+    controls.addEventListener("start", function () { userInteracting = true; });
+    controls.addEventListener("end", function () { userInteracting = false; });
+
+    var loader = new THREE.GLTFLoader();
+    loader.load(modelPath, function (gltf) {
+      var model = gltf.scene;
+      var maxAniso = renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : 1;
+      model.traverse(function (o) {
+        if (o.isMesh && o.material) {
+          var mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(function (m) {
+            m.side = THREE.DoubleSide;
+            if (m.map && maxAniso) m.map.anisotropy = maxAniso;
+          });
+        }
+      });
+
+      // Pivot-Gruppe: Objekt so verschieben, dass sein Mittelpunkt im Drehzentrum liegt
+      rotator = new THREE.Group();
+      rotator.add(model);
+      scene.add(rotator);
+      rotator.updateMatrixWorld(true);
+
+      var box = new THREE.Box3().setFromObject(model);
+      var center = box.getCenter(new THREE.Vector3());
+      var size = box.getSize(new THREE.Vector3());
+      model.position.x -= center.x;
+      model.position.y -= center.y;
+      model.position.z -= center.z;
+
+      // Kamera automatisch auf das Objekt einrahmen
+      var radius = 0.5 * Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) || 1;
+      var vfov = camera.fov * Math.PI / 180;
+      startDist = (radius / Math.sin(vfov / 2)) * 1.25;
+      camera.position.set(0, 0, startDist);
+      camera.near = startDist / 100;
+      camera.far = startDist * 100;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.minDistance = startDist * 0.4;
+      controls.maxDistance = startDist * 3.5;
+      controls.update();
+
+      if (spinner) spinner.style.display = "none";
+      stage.classList.add("is-loaded");
+    }, undefined, function (err) {
+      console.error("3D-Modell konnte nicht geladen werden:", err);
+      showFallback(stage);
+    });
+
+    function resize() {
+      var w = stage.clientWidth, h = stage.clientHeight;
+      if (!w || !h) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener("resize", resize);
+
+    (function animate() {
+      requestAnimationFrame(animate);
+      var dt = clock.getDelta();
+      if (rotator && autoRotate && !userInteracting) rotator.rotation.y += RAD_PER_SEC * dt;
+      controls.update();
+      renderer.render(scene, camera);
+    })();
+
+    var figure = stage.closest(".model3d");
+    if (figure) {
+      var rotBtn = figure.querySelector('[data-action="toggle-rotate"]');
+      var resetBtn = figure.querySelector('[data-action="reset"]');
+      if (rotBtn) rotBtn.addEventListener("click", function () {
+        autoRotate = !autoRotate;
+        rotBtn.setAttribute("aria-pressed", String(autoRotate));
+        rotBtn.textContent = autoRotate ? "Drehung pausieren" : "Drehung starten";
+      });
+      if (resetBtn) resetBtn.addEventListener("click", function () {
+        controls.target.set(0, 0, 0);
+        camera.position.set(0, 0, startDist);
+        camera.updateProjectionMatrix();
+        controls.update();
+      });
+    }
+  }
+
+  window.addEventListener("load", function () {
+    var stages = document.querySelectorAll(".model3d-stage");
+    for (var i = 0; i < stages.length; i++) initStage(stages[i]);
+  });
+})();
+
+/* ---------- Quiz mit Richtig/Falsch-Feedback ---------- */
+document.querySelectorAll(".quiz-card").forEach(function (card) {
+  var correct = card.getAttribute("data-correct");
+  var status = card.querySelector(".quiz-status");
+  card.querySelectorAll('input[type="radio"]').forEach(function (input) {
+    input.addEventListener("change", function () {
+      card.querySelectorAll(".quiz-option").forEach(function (opt) {
+        opt.classList.remove("is-correct", "is-wrong");
+        var optInput = opt.querySelector("input");
+        if (optInput.value === correct) opt.classList.add("is-correct");
+        else if (optInput.checked) opt.classList.add("is-wrong");
+      });
+      var isRight = input.value === correct;
+      status.textContent = isRight ? "Richtig!" : "Leider nicht ganz – schau dir die Erklärung an.";
+      status.classList.toggle("correct", isRight);
+      status.classList.toggle("wrong", !isRight);
+      card.classList.add("is-answered");
+    });
+  });
+});
+
+/* ---------- Kaiserinnen-Karten ---------- */
+document.querySelectorAll(".empress-card").forEach(function (button) {
+  button.addEventListener("click", function () {
+    var target = document.getElementById(button.dataset.target);
+    var willOpen = !target.classList.contains("is-open");
+    document.querySelectorAll(".empress-info").forEach(function (info) {
+      info.classList.toggle("is-open", info === target && willOpen);
+    });
+    document.querySelectorAll(".empress-card").forEach(function (card) {
+      card.classList.toggle("is-active", card === button && willOpen);
+    });
+  });
+});
+
+/* ---------- Zuordnungsspiel ---------- */
+(function () {
+  var result = document.getElementById("match-result");
+  var progress = document.getElementById("match-progress");
+  var selectedAncient = null;
+  var matchedPairs = 0;
+
+  function showResult(message) {
+    result.textContent = message;
+    result.classList.add("is-visible");
+  }
+  function updateProgress() {
+    progress.textContent = matchedPairs + " / 6 Paaren gefunden";
+  }
+
+  document.querySelectorAll(".match-card.ancient").forEach(function (card) {
+    card.addEventListener("click", function () {
+      if (card.classList.contains("is-matched")) return;
+      document.querySelectorAll(".match-card.ancient").forEach(function (item) {
+        item.classList.remove("is-selected");
+      });
+      selectedAncient = card;
+      card.classList.add("is-selected");
+      showResult("Wähle jetzt rechts den passenden heutigen Begriff aus.");
+    });
+  });
+
+  document.querySelectorAll(".match-card.modern").forEach(function (card) {
+    card.addEventListener("click", function () {
+      if (card.classList.contains("is-matched")) return;
+      if (!selectedAncient) {
+        showResult("Wähle zuerst links einen antiken Begriff aus.");
+        return;
+      }
+      var ancientCard = selectedAncient;
+      if (ancientCard.dataset.match === card.dataset.match) {
+        ancientCard.classList.remove("is-selected");
+        ancientCard.classList.add("is-matched");
+        card.classList.add("is-matched");
+        selectedAncient = null;
+        matchedPairs += 1;
+        updateProgress();
+        showResult(matchedPairs === 6 ? "Super – alles richtig zugeordnet!" : "Richtig! Dieses Paar gehört zusammen.");
+      } else {
+        card.classList.add("is-wrong-flash");
+        ancientCard.classList.add("is-wrong-flash");
+        showResult("Noch nicht ganz. Probiere ein anderes Paar.");
+        setTimeout(function () {
+          card.classList.remove("is-wrong-flash");
+          ancientCard.classList.remove("is-wrong-flash");
+        }, 650);
+      }
+    });
+  });
+
+  document.getElementById("reset-matches").addEventListener("click", function () {
+    document.querySelectorAll(".match-card").forEach(function (card) {
+      card.classList.remove("is-selected", "is-matched", "is-wrong-flash");
+    });
+    selectedAncient = null;
+    matchedPairs = 0;
+    updateProgress();
+    result.classList.remove("is-visible");
+    result.textContent = "";
+  });
+})();
+
+/* ---------- Schriftgröße (Barrierefreiheit) ---------- */
+(function () {
+  var root = document.documentElement;
+  var step = 1, min = 15, max = 24;
+  function current() { return parseFloat(window.getComputedStyle(root).fontSize); }
+  document.getElementById("font-up").addEventListener("click", function () {
+    var s = Math.min(current() + step, max); root.style.fontSize = s + "px";
+  });
+  document.getElementById("font-down").addEventListener("click", function () {
+    var s = Math.max(current() - step, min); root.style.fontSize = s + "px";
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mediaplayer Teil 1: Salbgefäß (Variante 2 – Weiter-Navigation)</title>
+<style>
+:root {
+  --olive-dark: #283618;
+  --olive: #606c38;
+  --olive-soft: #a3b18a;
+  --cream: #f6f1e7;
+  --paper: #fffaf0;
+  --bronze: #bc6c25;
+  --ink: #1f2418;
+  --wrong: #8f2f24;
+  --line: rgba(40, 54, 24, 0.16);
+}
+* { box-sizing: border-box; }
+html { font-size: 24px; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, rgba(40, 54, 24, 0.92), rgba(96, 108, 56, 0.86)),
+    radial-gradient(circle at top left, rgba(188, 108, 37, 0.22), transparent 38%),
+    var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.7;
+}
+
+/* ---------------- Screen-Verwaltung ----------------
+   Statt einer langen Scroll-Seite ist der Inhalt in einzelne
+   Vollbild-Screens aufgeteilt, die per "Weiter"-Button
+   durchgeblättert werden (wie bei wirtschaft_solidus.html). */
+.screen {
+  display: none;
+  height: 100vh;
+  padding: clamp(10px, 2vh, 22px) clamp(10px, 2vw, 28px);
+  justify-content: center;
+}
+.screen.active { display: flex; }
+
+.page {
+  display: flex;
+  flex-direction: column;
+  width: min(1480px, 100%);
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 250, 240, 0.34);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px rgba(12, 18, 8, 0.35);
+}
+
+/* ---------------- Kopfleiste (Navigation + Barrierefreiheit) ---------------- */
+.topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--olive-dark);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+}
+.topbar .spacer { flex: 1 1 auto; }
+.topbar span { opacity: 0.85; }
+.topbar .progress { letter-spacing: 0.04em; }
+.topbar button {
+  min-width: 40px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid rgba(246, 241, 231, 0.5);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cream);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.topbar button:hover { background: rgba(246, 241, 231, 0.15); }
+
+/* ---------------- Startseiten-Hero ---------------- */
+.hero {
+  flex: 0 0 auto;
+  min-height: clamp(150px, 30vh, 340px);
+  display: grid;
+  align-items: end;
+  padding: clamp(18px, 3vh, 34px);
+  color: var(--cream);
+  background:
+    linear-gradient(180deg, rgba(40, 54, 24, 0.08), rgba(40, 54, 24, 0.86)),
+    url("assets/kosmetik/badehaus-header.png") center / cover,
+    linear-gradient(135deg, #4f5f2b, #283618);
+}
+.hero h1 {
+  max-width: 1150px;
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+/* ---------------- Inhaltsbereich (pro Screen, intern scrollbar) ---------------- */
+.screen-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: clamp(18px, 3vh, 40px) clamp(20px, 3.5vw, 56px);
+}
+.screen-body::-webkit-scrollbar { width: 8px; }
+.screen-body::-webkit-scrollbar-thumb { background: var(--olive-soft); border-radius: 4px; }
+
+.lead {
+  margin: 0 0 24px;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  color: var(--olive-dark);
+}
+.intro {
+  margin: 0 0 14px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--olive);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+}
+.intro .lead { margin: 0 0 12px; }
+.intro p:last-child { margin-bottom: 0; }
+.screen-body h2 {
+  margin: 0 0 14px;
+  color: var(--olive-dark);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.15;
+}
+.screen-body h3 {
+  margin: 30px 0 12px;
+  color: var(--olive-dark);
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  line-height: 1.2;
+}
+.screen-body p { margin: 0 0 18px; }
+a { color: var(--bronze); font-weight: 700; }
+
+/* Figures */
+.text-image {
+  margin: 28px 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+  box-shadow: 0 10px 26px rgba(40, 54, 24, 0.10);
+}
+.text-image img {
+  width: 100%;
+  max-height: 44vh;
+  display: block;
+  object-fit: contain;
+  background: #fbf7ec;
+}
+.text-image figcaption {
+  padding: 12px 16px 14px;
+  color: var(--olive-dark);
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Text + Bild nebeneinander */
+.media-split {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: start;
+  margin: 10px 0;
+}
+.media-split .media-text > :first-child { margin-top: 0; }
+.media-split .media-text > :last-child { margin-bottom: 0; }
+.media-split .text-image { margin: 0; }
+.media-split .text-image img { max-height: 52vh; }
+.media-split--rev .media-text { order: 2; }
+.media-split--rev .text-image { order: 1; }
+@media (max-width: 900px) {
+  .media-split { grid-template-columns: 1fr; }
+  .media-split--rev .media-text,
+  .media-split--rev .text-image { order: 0; }
+}
+
+/* 3D object block */
+.object3d {
+  margin: 6px 0 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.model3d { margin: 0; }
+.model3d-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 46vh;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 38%, #fffdf6 0%, #f3ecdb 60%, #e7ddc6 100%);
+  box-shadow: 0 12px 30px rgba(40, 54, 24, 0.14);
+  touch-action: none;
+}
+.model3d-canvas { position: absolute; inset: 0; }
+.model3d-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
+.model3d-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 400ms ease;
+}
+.model3d-fallback img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.model3d-stage.is-loaded .model3d-fallback { opacity: 0; pointer-events: none; }
+.model3d-note {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: none;
+  max-width: calc(100% - 28px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(40, 54, 24, 0.82);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.model3d-stage.is-fallback .model3d-note { display: block; }
+.model3d-spinner {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(40, 54, 24, 0.82);
+  color: var(--cream);
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+}
+.model3d-spinner .dot {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(246, 241, 231, 0.35);
+  border-top-color: var(--cream);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.model3d-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: Arial, sans-serif;
+}
+.model3d-hint {
+  margin: 12px 0 0;
+  color: var(--olive-dark);
+  font-family: Arial, sans-serif;
+  font-size: 0.92rem;
+  opacity: 0.85;
+}
+
+/* Steckbrief / fact panel */
+.steckbrief {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(163, 177, 138, 0.16);
+  padding: 22px 24px;
+  font-family: Arial, sans-serif;
+}
+.steckbrief h3 {
+  margin: 0 0 14px;
+  color: var(--olive-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.4rem;
+}
+.steckbrief dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; }
+.steckbrief dt { color: var(--olive); font-weight: 700; }
+.steckbrief dd { margin: 0; color: var(--ink); }
+
+/* Buttons */
+.button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--olive);
+  border-radius: 8px;
+  background: var(--olive);
+  color: var(--cream);
+  font: inherit;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+.button:hover { background: var(--olive-dark); border-color: var(--olive-dark); }
+.button.secondary { background: transparent; color: var(--olive-dark); }
+.button.secondary:hover { background: rgba(96, 108, 56, 0.12); }
+
+/* ---------------- Fusszeile mit "Weiter"-Button ---------------- */
+.navrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  background: #fbf7ec;
+}
+.navrow .button {
+  min-width: 280px;
+  padding: 12px 28px;
+  font-size: 1.02rem;
+}
+
+/* Quiz */
+.quiz {
+  font-family: Arial, sans-serif;
+}
+.quiz > p { margin: 0 0 18px; }
+.quiz-card {
+  margin: 14px 0;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbf7ec;
+  box-shadow: 0 8px 20px rgba(40, 54, 24, 0.08);
+}
+.quiz-question { margin: 0 0 14px; color: var(--ink); font-size: 1.08rem; font-weight: 700; }
+.quiz-options { margin: 0; display: flex; flex-wrap: wrap; gap: 10px; border: 0; padding: 0; }
+.quiz-options legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.quiz-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.quiz-option input {
+  appearance: none; -webkit-appearance: none;
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  border: 2px solid var(--olive);
+  border-radius: 50%;
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.quiz-option input:checked { background: var(--olive); box-shadow: inset 0 0 0 3px var(--paper); }
+.quiz-option:has(input:checked) { border-color: var(--olive); background: rgba(96, 108, 56, 0.10); font-weight: 700; }
+.quiz-option.is-correct { border-color: var(--olive); background: rgba(96, 108, 56, 0.20); }
+.quiz-option.is-correct input { background: var(--olive); border-color: var(--olive); }
+.quiz-option.is-wrong { border-color: var(--wrong); background: rgba(143, 47, 36, 0.12); }
+.quiz-option.is-wrong input { background: var(--wrong); border-color: var(--wrong); }
+.quiz-status {
+  display: none;
+  margin-top: 14px;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+.quiz-card.is-answered .quiz-status { display: block; }
+.quiz-status.correct { color: var(--olive-dark); }
+.quiz-status.wrong { color: var(--wrong); }
+.quiz-answer {
+  display: none;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--olive);
+  border-radius: 0 8px 8px 0;
+  background: rgba(163, 177, 138, 0.18);
+  color: #303525;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.quiz-card.is-answered .quiz-answer { display: block; }
+
+/* Abschluss-Screen */
+.closing {
+  font-size: 1.08rem;
+  color: var(--olive-dark);
+}
+.abschluss-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4vh;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding-top: 26px;
+  border-top: 2px solid rgba(96, 108, 56, 0.22);
+}
+.site-footer img { height: 44px; width: auto; display: block; }
+.site-footer img.novus { height: 56px; }
+
+@media (max-width: 900px) {
+  .object3d { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 1 | START ==================== -->
+<section class="screen active" id="screen-start">
+  <article class="page">
+    <div class="topbar">
+      <span class="progress">Seite 1 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <header class="hero" aria-label="Themenbereich Hygiene und Kosmetik">
+      <h1>Hygiene und Kosmetik im Vicus Wareswald</h1>
+    </header>
+
+    <div class="screen-body">
+      <div class="intro">
+        <p class="lead">Willkommen im Themenbereich „Hygiene und Kosmetik im Vicus Wareswald“</p>
+        <p>Entdecke, wie sich die Menschen im römischen Vicus Wareswald vor fast 2.000 Jahren pflegten und welche Schönheitsideale sie hatten.</p>
+        <p>Hier könnt ihr ein originales Fundstück als interaktives 3D-Modell erkunden, mehr über römische Körperpflege und Düfte erfahren und euer Wissen am Ende mit einem kleinen Quiz testen. Tippt einfach auf „Weiter“ und entdeckt Schritt für Schritt mehr über Körperpflege im Vicus Wareswald.</p>
+      </div>
+
+      <h3>Körperpflege im römischen Alltag</h3>
+      <p>Gepflegte Haare, wohlriechende Öle und kunstvolle Frisuren gehören für viele Menschen zur römischen Alltagskultur. Auch im Vicus Wareswald nutzten die Bewohner Gegenstände zur Körperpflege und zum Schmücken. Die hier gefundenen Objekte erzählen vom Alltag vor fast 2.000 Jahren und zeigen, wie weit römische Lebensgewohnheiten auch in den Nordwesten des Reiches gelangten.</p>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-objekt')">Weiter: Zum Objekt</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 2 | DAS OBJEKT (3D-MODELL) ==================== -->
+<section class="screen" id="screen-objekt">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 2 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <h2>Salbgefäß aus dem Wareswald</h2>
+      <div class="object3d">
+        <figure class="model3d">
+          <div class="model3d-stage" data-model="models/04_Gefaess.glb">
+            <div class="model3d-canvas"></div>
+            <div class="model3d-fallback">
+              <img src="assets/kosmetik/salbgefaess.png" alt="3D-Modell des Salbgefäßes aus dem Wareswald">
+            </div>
+            <div class="model3d-spinner" role="status"><span class="dot"></span><span>3D-Modell wird geladen …</span></div>
+            <div class="model3d-note">Vorschau – auf der Station im Museum dreht sich hier das interaktive 3D-Modell.</div>
+          </div>
+          <div class="model3d-controls">
+            <button class="button secondary" type="button" data-action="toggle-rotate" aria-pressed="true">Drehung pausieren</button>
+            <button class="button secondary" type="button" data-action="reset">Ansicht zurücksetzen</button>
+          </div>
+          <p class="model3d-hint">Ziehe mit der Maus oder dem Finger, um das Salbgefäß von allen Seiten zu betrachten.</p>
+        </figure>
+        <div class="steckbrief">
+          <h3>Steckbrief</h3>
+          <dl>
+            <dt>Objekt</dt><dd>Salb- und Ölgefäß</dd>
+            <dt>Datierung</dt><dd>2.–3. Jh. n. Chr.</dd>
+            <dt>Material</dt><dd>Bronze</dd>
+            <dt>Fundort</dt><dd>Vicus Wareswald</dd>
+            <dt>Zustand</dt><dd>grün-graue Patina, teilweise beschädigt</dd>
+          </dl>
+        </div>
+      </div>
+      <p>Körperpflege war in den gallorömischen Provinzen des Römischen Reiches weit mehr als Hygiene. Baden, Einölen der Haut, das Frisieren der Haare und das Auftragen von Düften gehörten für viele Menschen zum Alltag. Ein gepflegtes Äußeres galt als Zeichen von Kultur, Ordnung und sozialem Ansehen.</p>
+      <p>Archäologische Funde wie Salbgefäße und Haarnadeln zeigen, dass diese Gewohnheiten nicht nur in Rom, sondern auch in kleineren Siedlungen wie dem Vicus Wareswald verbreitet waren. Gut überliefert sind diese Informationen dank einer Art antikem Lexikon, der „Naturgeschichte“ des Plinius aus dem 1. Jh. n. Chr.</p>
+      <p>Dieses bronzene Gefäß diente zur Aufbewahrung von Salben, Ölen oder wohlriechenden Essenzen. Solche Pflegeprodukte wurden im römischen Alltag zur Körperpflege, für kosmetische Anwendungen und als Duftstoffe verwendet. Das Gefäß weist eine grün-graue Patina sowie deutliche Beschädigungen auf; ein Teil des ursprünglichen Behälters ist verloren gegangen.</p>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-duefte')">Weiter: Düfte und Parfüm</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 3 | DÜFTE ==================== -->
+<section class="screen" id="screen-duefte">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 3 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <h2>Wie rochen die Römer und Römerinnen?</h2>
+      <p>Kleine Salbgefäße – sogenannte Unguentarien – dienten zur Aufbewahrung kostbarer Öle, Salben oder Parfüms. Sie konnten aus Glas oder Keramik bestehen und wurden im Alltag ebenso verwendet wie als Grabbeigaben. Da Duftöle wertvoll waren, reichten meist kleine Mengen aus.</p>
+      <p>Parfüm bestand aus zwei Hauptbestandteilen: Der erste war eine flüssige Basis mit öliger Konsistenz, die die Duftstoffe konservierte. Sie bestand aus pflanzlichen Ölen, meist Olivenöl, aber auch Sesam- oder Leinöl konnten verwendet werden. Je fetthaltiger das Öl – etwa Mandelöl –, desto länger hielt der Duft. Dieser Basis konnten Konservierungs- und Farbstoffe wie Zinnober oder Orcanetta (eine gelbblühende, behaarte Pflanze) zugesetzt werden.</p>
+      <p>Der zweite Bestandteil war fest: Pflanzen, Blüten, Wurzeln oder Harze, die dem Öl zugesetzt wurden und die eigentliche Duftnote gaben. Die Bandbreite an Aromen war groß, wobei Rosen besonders hervorstachen. Weitere verwendete Stoffe waren Myrrhe, Zimt, Safran, Narde, Narzissen oder Quitten. Von allen Essenzen blieb jene, die zuletzt hinzugefügt wurde, am stärksten wahrnehmbar und prägte den charakteristischen Duft des Parfüms.</p>
+      <p>Doch neben den Grunddüften gab es auch für jede Körperstelle ein geeignetes Parfüm. Für die Wangen und das Haar wurde Serpillum (Feldthymian) verwendet, eine ausdauernde Pflanze, deren Duft an Zitrone oder Melisse erinnert. Die Arme parfümierte man mit Wasserminze oder Bohnenkraut, die Beine mit einem ägyptischen Parfüm, die Brust mit einem phönizischen und die Augenbrauen mit einem Lilienparfüm.</p>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-luxus')">Weiter: Luxus für alle?</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 4 | LUXUS FÜR ALLE? ==================== -->
+<section class="screen" id="screen-luxus">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 4 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <div class="media-split">
+        <div class="media-text">
+          <h2>Luxus für alle?</h2>
+          <p>Sauberkeit war in allen Gesellschaftsschichten wichtig. Wohlhabende Familien konnten sich jedoch teure Duftöle, exotische Salben oder private Bäder leisten. Menschen mit weniger Geld nutzten einfachere Mittel wie Asche, Pflanzenöle oder Kräuter und besuchten öffentliche Badehäuser.</p>
+        </div>
+        <figure class="text-image">
+          <img src="assets/kosmetik/roemischer-spiegel.jpg" alt="Römischer Spiegel">
+          <figcaption>Römischer Spiegel</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-wasser')">Weiter: Sauberes Wasser</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 5 | SAUBERES WASSER ==================== -->
+<section class="screen" id="screen-wasser">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 5 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <div class="media-split">
+        <div class="media-text">
+          <h2>Sauberes Wasser für die Stadt</h2>
+          <p>Frisches Wasser gelangte über Aquädukte in Brunnen, Thermen und öffentliche Toiletten. Viele Latrinen wurden von fließendem Wasser gespült. Statt Toilettenpapier benutzte man einen Naturschwamm an einem Holzstab, der nach der Benutzung ausgewaschen wurde.</p>
+          <p>Viele Römerinnen und Römer reinigten ihren Körper nicht mit Seife, sondern mit einer Strigilis – einem gebogenen Schabeisen aus Metall. Nach dem Einölen der Haut wurde das Gemisch aus Öl, Schweiß, Staub und Schmutz mit der Strigilis abgeschabt. Besonders in den öffentlichen Thermen gehörte diese Art der Körperpflege zur täglichen Hygiene und war zugleich ein wichtiger Bestandteil der römischen Badekultur.</p>
+        </div>
+        <figure class="text-image">
+          <img src="assets/kosmetik/strigil.jpg" alt="Strigilis – gebogenes Schabeisen aus Metall">
+          <figcaption>Strigilis</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-quiz')">Weiter: Zum Quiz</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 6 | QUIZ ==================== -->
+<section class="screen" id="screen-quiz">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 6 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <section class="quiz" aria-label="Teste dein Wissen">
+        <h2>Teste dein Wissen!</h2>
+        <p>Wähle eine Antwort aus – du erhältst sofort Rückmeldung.</p>
+
+        <article class="quiz-card" data-correct="falsch">
+          <p class="quiz-question">Übermäßiges Schminken galt bei römischen Männern als besonders angesehen.</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-1" value="richtig"> Richtig</label>
+            <label class="quiz-option"><input type="radio" name="frage-1" value="falsch"> Falsch</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Zu viel Schminke wurde bei Männern häufig als Zeichen von Eitelkeit angesehen.</p></div>
+        </article>
+
+        <article class="quiz-card" data-correct="richtig">
+          <p class="quiz-question">Die Römer putzten ihre Zähne bereits mit Zahnpulver.</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-2" value="richtig"> Richtig</label>
+            <label class="quiz-option"><input type="radio" name="frage-2" value="falsch"> Falsch</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Sie verwendeten Zahnpulver aus Kreide, Asche, zerstoßenen Knochen oder Bimsstein.</p></div>
+        </article>
+
+        <article class="quiz-card" data-correct="asche-kreide">
+          <p class="quiz-question">Woraus bestand römisches Zahnpulver?</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-3" value="asche-kreide"> Asche und Kreide</label>
+            <label class="quiz-option"><input type="radio" name="frage-3" value="seife"> Seife</label>
+            <label class="quiz-option"><input type="radio" name="frage-3" value="sand"> Sand</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Häufig verwendete man Asche und Kreide sowie weitere mineralische Stoffe.</p></div>
+        </article>
+
+        <article class="quiz-card" data-correct="falsch">
+          <p class="quiz-question">Die Römer benutzten Zahnbürsten aus Kunststoff.</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-4" value="richtig"> Richtig</label>
+            <label class="quiz-option"><input type="radio" name="frage-4" value="falsch"> Falsch</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Die Zähne wurden mit Tüchern oder kleinen Holzstäbchen gereinigt.</p></div>
+        </article>
+
+        <article class="quiz-card" data-correct="helle-haut">
+          <p class="quiz-question">Was galt im Römischen Reich als besonders schön?</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-5" value="helle-haut"> Helle Haut</label>
+            <label class="quiz-option"><input type="radio" name="frage-5" value="sonnengebraeunte-haut"> Sonnengebräunte Haut</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Helle Haut galt als Zeichen von Wohlstand, da sie zeigte, dass man nicht auf den Feldern arbeiten musste.</p></div>
+        </article>
+
+        <article class="quiz-card" data-correct="richtig">
+          <p class="quiz-question">Für verschiedene Körperstellen verwendeten die Römer unterschiedliche Parfüms.</p>
+          <fieldset class="quiz-options">
+            <legend>Antwort auswählen</legend>
+            <label class="quiz-option"><input type="radio" name="frage-6" value="richtig"> Richtig</label>
+            <label class="quiz-option"><input type="radio" name="frage-6" value="falsch"> Falsch</label>
+          </fieldset>
+          <p class="quiz-status"></p>
+          <div class="quiz-answer"><p>Antike Autoren beschreiben spezielle Düfte für Haare, Arme oder Augenbrauen.</p></div>
+        </article>
+      </section>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-abschluss')">Weiter: Abschluss</button>
+    </div>
+  </article>
+</section>
+
+<!-- ==================== 7 | ABSCHLUSS ==================== -->
+<section class="screen" id="screen-abschluss">
+  <article class="page">
+    <div class="topbar">
+      <button type="button" onclick="showScreen('screen-start')">&#8962; Start</button>
+      <span class="progress">Seite 7 von 7</span>
+      <span class="spacer"></span>
+      <span>Schriftgröße</span>
+      <button type="button" class="font-down" aria-label="Schrift verkleinern">A−</button>
+      <button type="button" class="font-up" aria-label="Schrift vergrößern">A+</button>
+    </div>
+
+    <div class="screen-body">
+      <div class="abschluss-inner">
+        <p class="closing">Salbgefäß und Haarnadel zeigen, dass die Bewohnerinnen und Bewohner des Vicus Wareswald an den Lebensgewohnheiten des Römischen Reiches teilhatten. Körperpflege, Düfte und Badekultur waren nicht nur in den großen Städten verbreitet, sondern gehörten auch in einer kleineren Siedlung wie dem Wareswald zum Alltag.</p>
+
+        <footer class="site-footer">
+          <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+          <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+          <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
+        </footer>
+      </div>
+    </div>
+
+    <div class="navrow">
+      <button class="button" type="button" onclick="showScreen('screen-start')">Zurück zum Start</button>
+    </div>
+  </article>
+</section>
+
+<!-- Three.js – lokale Kopien für den Offline-Betrieb (MIT License, © three.js authors) -->
+<script src="js/three.min.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/DRACOLoader.js"></script>
+<script src="js/draco-setup.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script>
+/* ---------- Screen-Navigation ---------- */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(function (s) {
+    s.classList.remove("active");
+  });
+  var target = document.getElementById(id);
+  target.classList.add("active");
+
+  // Inhalt des neuen Screens immer oben beginnen lassen
+  var body = target.querySelector(".screen-body");
+  if (body) body.scrollTop = 0;
+
+  // 3D-Viewer/Canvas an die nun sichtbare Bildschirmgröße anpassen
+  window.dispatchEvent(new Event("resize"));
+}
+
+/* ---------- 3D-Viewer (Three.js, offline) ---------- */
+(function () {
+  var RAD_PER_SEC = 0.4; // langsame Auto-Rotation (~16 s pro Umdrehung)
+
+  function showFallback(stage) {
+    var spinner = stage.querySelector(".model3d-spinner");
+    if (spinner) spinner.style.display = "none";
+    stage.classList.add("is-fallback");
+  }
+
+  function initStage(stage) {
+    if (!window.THREE || !THREE.WebGLRenderer) { showFallback(stage); return; }
+    var modelPath = stage.getAttribute("data-model");
+    var canvasWrap = stage.querySelector(".model3d-canvas");
+    var spinner = stage.querySelector(".model3d-spinner");
+    var parentScreen = stage.closest(".screen");
+
+    var width = stage.clientWidth || 600;
+    var height = stage.clientHeight || 450;
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 2000);
+    camera.position.set(0, 0, 4);
+
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+    catch (e) { showFallback(stage); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000, 0);
+    if ("outputEncoding" in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+    if (THREE.ACESFilmicToneMapping) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.5; }
+    canvasWrap.appendChild(renderer.domElement);
+
+    // Weiches Umgebungslicht, damit die texturierten Modelle nicht zu dunkel wirken
+    try {
+      var pmrem = new THREE.PMREMGenerator(renderer);
+      var envScene = new THREE.Scene();
+      envScene.background = new THREE.Color(0xffffff);
+      envScene.add(new THREE.Mesh(
+        new THREE.SphereGeometry(12, 24, 12),
+        new THREE.MeshBasicMaterial({ color: 0xf3ecdb, side: THREE.BackSide })
+      ));
+      var glow = new THREE.Mesh(
+        new THREE.SphereGeometry(3, 16, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      glow.position.set(6, 7, 4);
+      envScene.add(glow);
+      scene.environment = pmrem.fromScene(envScene, 0.08).texture;
+      pmrem.dispose();
+    } catch (e) { /* funktioniert auch ohne Umgebungslicht */ }
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xbfb79a, 1.0));
+    var key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(4, 6, 5); scene.add(key);
+    var fill = new THREE.DirectionalLight(0xffffff, 0.8); fill.position.set(-5, 2, -4); scene.add(fill);
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+
+    var rotator = null;       // Pivot-Gruppe, dreht sich um den Objektmittelpunkt
+    var autoRotate = true;
+    var userInteracting = false;
+    var startDist = 4;
+    var clock = new THREE.Clock();
+
+    controls.addEventListener("start", function () { userInteracting = true; });
+    controls.addEventListener("end", function () { userInteracting = false; });
+
+    var loader = new THREE.GLTFLoader();
+    loader.load(modelPath, function (gltf) {
+      var model = gltf.scene;
+      var maxAniso = renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : 1;
+      model.traverse(function (o) {
+        if (o.isMesh && o.material) {
+          var mats = Array.isArray(o.material) ? o.material : [o.material];
+          mats.forEach(function (m) {
+            m.side = THREE.DoubleSide;
+            if ("envMapIntensity" in m) m.envMapIntensity = 1.6;
+            if (m.map && maxAniso) m.map.anisotropy = maxAniso;
+          });
+        }
+      });
+
+      // Pivot-Gruppe: Objekt so verschieben, dass sein Mittelpunkt im Drehzentrum liegt
+      rotator = new THREE.Group();
+      rotator.add(model);
+      scene.add(rotator);
+      rotator.updateMatrixWorld(true);
+
+      var box = new THREE.Box3().setFromObject(model);
+      var center = box.getCenter(new THREE.Vector3());
+      var size = box.getSize(new THREE.Vector3());
+      model.position.x -= center.x;
+      model.position.y -= center.y;
+      model.position.z -= center.z;
+
+      // Kamera automatisch auf das Objekt einrahmen (nach sichtbarer Höhe/Breite)
+      var halfH = (size.y / 2) || 0.001;
+      var halfW = (Math.max(size.x, size.z) / 2) || 0.001;
+      var vfov = camera.fov * Math.PI / 180;
+      var hfov = 2 * Math.atan(Math.tan(vfov / 2) * (width / height));
+      startDist = Math.max(halfH / Math.tan(vfov / 2), halfW / Math.tan(hfov / 2)) * 1.15;
+      camera.position.set(0, 0, startDist);
+      camera.near = startDist / 100;
+      camera.far = startDist * 100;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.minDistance = startDist * 0.4;
+      controls.maxDistance = startDist * 3.5;
+      controls.update();
+
+      if (spinner) spinner.style.display = "none";
+      stage.classList.add("is-loaded");
+    }, undefined, function (err) {
+      console.error("3D-Modell konnte nicht geladen werden:", err);
+      showFallback(stage);
+    });
+
+    function resize() {
+      var w = stage.clientWidth, h = stage.clientHeight;
+      if (!w || !h) return;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener("resize", resize);
+
+    (function animate() {
+      requestAnimationFrame(animate);
+      var dt = clock.getDelta();   // immer abrufen, sonst Rotationssprung beim Fortsetzen
+      // Nur rendern, wenn der Objekt-Screen tatsächlich sichtbar ist –
+      // entlastet GPU/CPU auf allen anderen Screens erheblich.
+      if (document.hidden || (parentScreen && !parentScreen.classList.contains("active"))) return;
+      if (rotator && autoRotate && !userInteracting) rotator.rotation.y += RAD_PER_SEC * dt;
+      controls.update();
+      renderer.render(scene, camera);
+    })();
+
+    var figure = stage.closest(".model3d");
+    if (figure) {
+      var rotBtn = figure.querySelector('[data-action="toggle-rotate"]');
+      var resetBtn = figure.querySelector('[data-action="reset"]');
+      if (rotBtn) rotBtn.addEventListener("click", function () {
+        autoRotate = !autoRotate;
+        rotBtn.setAttribute("aria-pressed", String(autoRotate));
+        rotBtn.textContent = autoRotate ? "Drehung pausieren" : "Drehung starten";
+      });
+      if (resetBtn) resetBtn.addEventListener("click", function () {
+        controls.target.set(0, 0, 0);
+        camera.position.set(0, 0, startDist);
+        camera.updateProjectionMatrix();
+        controls.update();
+      });
+    }
+  }
+
+  window.addEventListener("load", function () {
+    var stages = document.querySelectorAll(".model3d-stage");
+    for (var i = 0; i < stages.length; i++) initStage(stages[i]);
+  });
+})();
+
+/* ---------- Quiz mit Richtig/Falsch-Feedback ---------- */
+document.querySelectorAll(".quiz-card").forEach(function (card) {
+  var correct = card.getAttribute("data-correct");
+  var status = card.querySelector(".quiz-status");
+  card.querySelectorAll('input[type="radio"]').forEach(function (input) {
+    input.addEventListener("change", function () {
+      card.querySelectorAll(".quiz-option").forEach(function (opt) {
+        opt.classList.remove("is-correct", "is-wrong");
+        var optInput = opt.querySelector("input");
+        if (optInput.value === correct) opt.classList.add("is-correct");
+        else if (optInput.checked) opt.classList.add("is-wrong");
+      });
+      var isRight = input.value === correct;
+      status.textContent = isRight ? "Richtig!" : "Leider nicht ganz – schau dir die Erklärung an.";
+      status.classList.toggle("correct", isRight);
+      status.classList.toggle("wrong", !isRight);
+      card.classList.add("is-answered");
+    });
+  });
+});
+
+/* ---------- Schriftgröße (Barrierefreiheit) ----------
+   Die A−/A+-Buttons existieren auf jedem Screen und werden
+   daher über Klassen statt über IDs angesprochen. */
+(function () {
+  var root = document.documentElement;
+  var step = 1, min = 20, max = 34;
+  function current() { return parseFloat(window.getComputedStyle(root).fontSize); }
+  document.querySelectorAll(".font-up").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = Math.min(current() + step, max); root.style.fontSize = s + "px";
+    });
+  });
+  document.querySelectorAll(".font-down").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var s = Math.max(current() - step, min); root.style.fontSize = s + "px";
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wirtschaft &ndash; Der Solidus des Valentinian II. &ndash; Haptic Collection</title>
+    <title>Wirtschaft &ndash; Der R&ouml;tel &ndash; Haptic Collection</title>
     <style>
         /* ------------------------------------------------------------
            Farbpalette aus dem Plakatdesign "Wirtschaft" (Team Handel)
            + Vorgabe aus concept text.docx (#A42C1A, Hintergrund dunkel)
+           Aufbau identisch zu wirtschaft_solidus.html
            ------------------------------------------------------------ */
         :root {
             --bg:       #1A1A14;   /* warmes Schwarz (Plakathintergrund) */
@@ -120,9 +121,9 @@
             max-width: 100%;
         }
 
-        /* Freistehendes Emblem (runde, transparente Version) auf Start- und
-           Quizseite. Die PNG hat grosse transparente Raender; der Wrapper zoomt
-           daher per Positionierung auf den sichtbaren Inhalt (Bounding-Box). */
+        /* Freistehendes Emblem (runde, transparente Version).
+           Die PNG hat grosse transparente Raender; der Wrapper zoomt daher per
+           Positionierung auf den sichtbaren Inhalt (Bounding-Box der Grafik). */
         .emblem-free {
             flex: 0 0 auto;
             position: relative;
@@ -170,7 +171,7 @@
             border-right: 13px solid var(--panel);
         }
 
-        /* Bildrahmen (Karte, Statue) */
+        /* Bildrahmen */
         .img-frame {
             border: 3px solid var(--deepred);
             outline: 1px solid var(--tan);
@@ -254,12 +255,14 @@
             transition: opacity 400ms ease;
         }
         .model3d-stage.is-loaded .model3d-fallback { opacity: 0; pointer-events: none; }
-        .model3d-fallback .coin {
-            height: 40%;
-            aspect-ratio: 1 / 1;
-            border-radius: 50%;
-            border: 3px solid var(--tan);
-            background: radial-gradient(circle at 35% 30%, #3a342a, var(--bg) 75%);
+        /* Stilisierter Rötelstift als Fallback-Grafik */
+        .model3d-fallback .stick {
+            height: 8%;
+            width: 42%;
+            border-radius: 6px;
+            border: 2px solid var(--tan);
+            background: linear-gradient(180deg, #B24A2E 0%, var(--red) 55%, #7E2413 100%);
+            transform: rotate(-12deg);
         }
         .model3d-fallback .ph-label {
             font-size: clamp(0.8rem, 1.9vh, 1.15rem);
@@ -344,56 +347,21 @@
             color: var(--tanlight);
         }
 
-        /* ---------------- Kaiserseite ---------------- */
-        #screen-kaiser main { align-items: stretch; }
-
-        .kaiser-figure {
-            flex: 0 0 auto;
+        /* ---------------- Bildseiten (Herstellung / Nutzung) ---------------- */
+        .image-row {
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            max-width: 28%;
+            gap: 2.5vw;
+            min-height: 0;
+            max-width: 100%;
         }
-        .kaiser-figure img { max-height: 56vh; }
-
-        .kaiser-text {
-            flex: 1 1 auto;
-            min-width: 0;
-            max-width: 72ch;
-            overflow-y: auto;               /* langer Text: intern scrollbar */
-            -webkit-overflow-scrolling: touch;
-            padding-right: 1.5vw;
-            font-size: clamp(0.85rem, 2.05vh, 1.2rem);
-            line-height: 1.6;
-        }
-        .kaiser-text h3 {
-            font-size: clamp(1rem, 2.6vh, 1.5rem);
-            color: var(--tanlight);
-            font-style: italic;
-            margin-bottom: 1.2vh;
-        }
-        .kaiser-text p { margin-bottom: 1.4vh; }
-        .kaiser-text .lead { color: var(--tanlight); }
-
-        /* dezente Scrollbar */
-        .kaiser-text::-webkit-scrollbar { width: 6px; }
-        .kaiser-text::-webkit-scrollbar-thumb {
-            background-color: var(--deepred);
-            border-radius: 3px;
-        }
-
-        .scroll-hint {
-            font-size: clamp(0.65rem, 1.5vh, 0.9rem);
-            font-style: italic;
-            color: var(--tanlight);
-            opacity: 0.75;
-            text-align: right;
-            padding-right: 1.5vw;
-        }
+        .image-row .img-frame { flex: 0 1 auto; }
+        .image-row img { max-height: 46vh; max-width: 27vw; }
+        /* Bei nur zwei Bildern darf jedes etwas groesser sein */
+        .image-row.two img { max-height: 54vh; max-width: 38vw; }
 
         /* ---------------- Quiz ---------------- */
-        #screen-quizintro main { flex-direction: column; gap: 2.5vh; }
-
         .quiz-stage {
             display: flex;
             flex-direction: column;
@@ -458,102 +426,24 @@
             text-align: center;
         }
 
-        .quiz-result {
-            font-size: clamp(1.1rem, 3vh, 1.8rem);
-            text-align: center;
-        }
-
-        /* ---------------- Videoseite ---------------- */
-        .video-frame {
-            position: relative;
-            height: 100%;
-            max-height: 100%;
-            max-width: 100%;
-            aspect-ratio: 16 / 9;
-            background-color: var(--panel);
-            border: 3px solid var(--deepred);
-            outline: 1px solid var(--tan);
-            outline-offset: 6px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: contain;
-            background-color: #000;
-        }
-
-        .overlay {
-            position: absolute;
-            inset: 0;
-            display: none;
-            align-items: flex-end;
-            justify-content: center;
-            padding-bottom: 3vh;
-            pointer-events: none;
-        }
-        .overlay.visible { display: flex; }
-        .overlay .pill {
-            background-color: rgba(26, 26, 20, 0.85);
-            color: var(--tanlight);
-            font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-            font-size: clamp(0.85rem, 2vh, 1.2rem);
-            letter-spacing: 0.08em;
-            padding: 0.6em 1.4em;
-            border: 1px solid var(--tan);
-            border-radius: 999px;
-        }
-
-        .endcard {
-            position: absolute;
-            inset: 0;
-            display: none;
+        /* ---------------- Abschlussseite ---------------- */
+        #screen-ende main {
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1.5vh;
-            background-color: rgba(26, 26, 20, 0.93);
-            color: var(--text);
+            gap: 2vh;
             text-align: center;
-            padding: 4vh 4vw;
         }
-        .endcard.visible { display: flex; }
-        .endcard .end-title {
-            font-size: clamp(1.2rem, 3.5vh, 2rem);
+        .end-title {
+            font-size: clamp(1.4rem, 4.5vh, 2.6rem);
             letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--red);
         }
-        .endcard .end-hint {
+        .end-hint {
             font-family: Calibri, 'Segoe UI', Arial, sans-serif;
             font-size: clamp(0.9rem, 2.2vh, 1.3rem);
             color: var(--tanlight);
-            max-width: 40ch;
+            max-width: 44ch;
             line-height: 1.5;
-        }
-
-        .video-credit {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1.5vw;
-            padding-top: 1vh;
-        }
-        .video-credit p {
-            font-size: clamp(0.7rem, 1.7vh, 1rem);
-            font-style: italic;
-            color: var(--tanlight);
-            max-width: 46ch;
-            text-align: right;
-        }
-        .video-credit img {
-            height: clamp(48px, 9vh, 90px);
-            width: auto;
-            background-color: #fff;
-            padding: 4px;
-            border: 1px solid var(--tan);
         }
 
         /* ---------------- Navigation / CTA ---------------- */
@@ -610,7 +500,7 @@
         <header>
             <div class="eyebrow">Vicus &middot; Wareswald &middot; 2026</div>
             <h1>Wirtschaft</h1>
-            <div class="subtitle">Der Solidus des Valentinian II.</div>
+            <div class="subtitle">Der R&ouml;tel</div>
         </header>
 
         <main>
@@ -646,8 +536,6 @@
 
         <footer>
             <div class="footer-logos">
-                <!-- Logopfade wie in hundekopf_video.html; greifen erst, wenn die
-                     Datei im Repo-Ordner html_content liegt -->
                 <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung" onerror="this.style.display='none'">
                 <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium" onerror="this.style.display='none'">
                 <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes" onerror="this.style.display='none'">
@@ -659,17 +547,20 @@
     <section class="screen" id="screen-objekt">
         <header>
             <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
-            <div class="eyebrow">Wirtschaft &middot; Solidus</div>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
             <h2 class="screen-title">Das Objekt</h2>
         </header>
 
         <main>
             <div class="model-stage">
-                <div class="model3d-stage" data-model="models/04_Goldmuenze.glb">
+                <!-- HINWEIS: Der 3D-Scan des Rötels liegt noch nicht vor.
+                     Sobald die .glb-Datei in models/ liegt, hier den Dateinamen
+                     anpassen - alles Weitere laeuft automatisch. -->
+                <div class="model3d-stage" data-model="models/roetel.glb">
                     <div class="model3d-canvas"></div>
                     <div class="model3d-fallback">
-                        <div class="coin"></div>
-                        <div class="ph-label">3D-Modell des Solidus</div>
+                        <div class="stick"></div>
+                        <div class="ph-label">3D-Modell des R&ouml;tels</div>
                     </div>
                     <div class="model3d-spinner" role="status"><span class="dot"></span><span>3D-Modell wird geladen &hellip;</span></div>
                     <div class="model3d-note">Vorschau &ndash; auf der Station im Museum dreht sich hier das interaktive 3D-Modell.</div>
@@ -680,112 +571,22 @@
                         <button type="button" data-action="toggle-rotate" aria-pressed="true">Drehung pausieren</button>
                         <button type="button" data-action="reset">Ansicht zur&uuml;cksetzen</button>
                     </div>
-                    <div class="dating">Datierung: 388&ndash;392 n.&thinsp;Chr.</div>
+                    <div class="dating">Datierung: 1.&ndash;4. Jh. n.&thinsp;Chr.</div>
                 </div>
             </div>
         </main>
 
         <div class="nav-row">
-            <button class="cta" onclick="showScreen('screen-kaiser')">Weiter: Der Kaiser</button>
+            <button class="cta" onclick="showScreen('screen-verwendung')">Weiter</button>
         </div>
     </section>
 
-    <!-- ==================== 3 | DER KAISER ==================== -->
-    <section class="screen" id="screen-kaiser">
+    <!-- ==================== 3 | DER RÖTEL (SPRECHBLASE) ==================== -->
+    <section class="screen" id="screen-verwendung">
         <header>
             <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
-            <div class="eyebrow">Wirtschaft &middot; Solidus</div>
-            <h2 class="screen-title">Valentinian II.</h2>
-        </header>
-
-        <main>
-            <div class="kaiser-figure">
-                <div class="img-frame">
-                    <img src="assets/wirtschaft/statue_valentinian.jpg" alt="Statue des Valentinian II.">
-                    <div class="img-caption">Statue des Valentinian II.</div>
-                </div>
-            </div>
-
-            <div class="kaiser-text" id="kaiserText">
-                <h3>Valentinian II., ein glückloser Kindkaiser</h3>
-                <p class="lead">
-                    Mit nur vier Jahren wurde Valentinian II. zum römischen Kaiser des
-                    Westens ernannt &ndash; ein Kind auf dem mächtigsten Thron seiner Zeit.
-                    Doch hinter dem glanzvollen Titel verbarg sich eine tragische
-                    Geschichte: Valentinian trug zwar die Kaiserkrone, doch die Macht lag
-                    fast nie in seinen eigenen Händen.
-                </p>
-                <p>
-                    Flavius Valentinianus, genannt Valentinian II. (* Herbst 371 wohl in
-                    Augusta Treverorum, heute Trier; &dagger; 15. Mai 392 in Vienne) war von
-                    375 n. Chr. bis zu seinem Tod 392 n. Chr. römischer Kaiser (Augustus)
-                    im Westen. Zunächst regierte Valentinian den Westen zusammen mit
-                    seinem Halbbruder Gratian und nach dessen Tod 383 n. Chr. dann allein.
-                    Im Osten regierte Flavius Theodosius, genannt Theodosius I.
-                    (auch der Große).
-                </p>
-                <p>
-                    Als sein Vater Kaiser Valentinian I. verstarb, gelangte Valentinian II.
-                    &ndash; im Gegensatz zu den meisten Kaisern vor ihm &ndash; bereits als Kind im
-                    Alter von nur vier Jahren an die Herrschaft. In den ersten Jahren
-                    seiner Herrschaft war der junge Kaiser somit stark von Beratern und
-                    seiner Mutter Justina abhängig. Diese Dynamik stellte zur Zeit
-                    Valentinians II. noch eine Ausnahme dar, wurde in der Folgezeit jedoch
-                    fast zur Regel.
-                </p>
-                <p>
-                    Valentinian II. war der erste dieser Kinderkaiser, der nominell
-                    tatsächlich einem eigenen Hof vorstand und einen eigenen Reichsteil
-                    regieren sollte. Im Jahre 389 n. Chr. verlegte er seinen Regierungssitz
-                    von Mailand nach Trier und Vienne.
-                </p>
-                <p>
-                    Auch dort gelang es ihm nicht, eine selbstständige Herrschaft
-                    auszuüben, der junge Kaiser wurde weiterhin stark von seinen Beratern
-                    beeinflusst &ndash; allen voran von Arbogast, seinem magister militum. Der
-                    magister militum, oder Heermeister, war zu dieser Zeit der höchste
-                    militärische Rang; die Inhaber dieses Amtes waren dem Kaiser selbst
-                    unterstellt und verfügten über große Macht und hohes Ansehen.
-                </p>
-                <p>
-                    Arbogast nutzte diese Stellung und das geringe Alter des Kaisers, um
-                    die Herrschaft über den Westen faktisch zu übernehmen, während sie
-                    nach außen weiterhin bei Valentinian II. lag. Theodosius I.
-                    unterstützte ihn hierbei, vermutlich erhoffte sich Theodosius I. so
-                    seinen Einfluss im Westen zu vergrößern. Jedoch kam es zwischen
-                    Valentinian II. und Arbogast zum offenen Konflikt, als der Heermeister
-                    einen politischen Gegner, der unter Valentinians Schutz stand, vor
-                    dessen Augen erschlug.
-                </p>
-                <p>
-                    Valentinian wollte und konnte diese öffentliche Missachtung seiner
-                    Autorität nicht hinnehmen und enthob Arbogast seines Amtes. Arbogast
-                    hingegen weigerte sich zu gehorchen und stellte Valentinian unter
-                    Hausarrest.
-                </p>
-                <p>
-                    Kurz darauf endete das Leben des Kaisers auf rätselhafte Weise: Der
-                    erst zwanzigjährige Valentinian II. wurde erhängt aufgefunden. Ob er
-                    sich aus Verzweiflung über seine Position selbst das Leben genommen
-                    hat oder von Arbogast ermordet wurde, ist bis heute unklar. In der
-                    modernen Forschung wird aktuell jedoch die Vermutung präferiert, dass
-                    die stetige Erfahrung von Machtlosigkeit und Fremdbestimmung den
-                    jungen Kaiser letztlich zum Suizid getrieben habe.
-                </p>
-            </div>
-        </main>
-
-        <div class="nav-row">
-            <button class="cta" onclick="showScreen('screen-quizintro')">Weiter zum Quiz</button>
-        </div>
-    </section>
-
-    <!-- ==================== 4 | QUIZ-EINLEITUNG ==================== -->
-    <section class="screen" id="screen-quizintro">
-        <header>
-            <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
-            <div class="eyebrow">Wirtschaft &middot; Solidus</div>
-            <h2 class="screen-title">Was war ein Solidus wert?</h2>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
+            <h2 class="screen-title">Ein vielseitiges Material</h2>
         </header>
 
         <main>
@@ -794,31 +595,91 @@
                     <img src="assets/wirtschaft/Emblem-transparent.png" alt="Römischer Händler (Emblem Team Wirtschaft)">
                 </div>
                 <div class="bubble">
-                    Aus einem römischen Pfund Gold (=&thinsp;327,45&thinsp;g) wurden 72 Solidi
-                    gemünzt. Ein Solidus bestand aus ca. 4,45&thinsp;g Gold, eine Semissis
-                    enthielt mit ca. 2,25&thinsp;g die Hälfte und eine Tremissis mit
-                    ca. 1,516&thinsp;g wiederum ein Drittel des Goldgehalts eines Solidus.
+                    Rötel war ein vielseitig genutztes Material und spielte sowohl im
+                    Alltag als auch im Handwerk eine wichtige Rolle. Er wurde als
+                    Markierungs- und Schreibstift verwendet, um Zeichen oder Notizen auf
+                    verschiedenen Oberflächen anzubringen. Außerdem nutzte man den Rötel
+                    auch in der Kosmetik.
                     <br><br>
-                    Ein einfacher Landarbeiter verdiente um 300 n. Chr. in etwa 40 Tagen
-                    einen Solidus. Anlässlich der alle fünf Jahre stattfindenden
-                    <em>quinquennalia</em>, einer Fünfjahresfeier, erhielten Soldaten
-                    5 Solidi.
+                    Ein weiterer wichtiger Einsatzbereich war die Malerei. Zu Pulver
+                    verarbeitet, diente Rötel als Pigment für Anstrichfarben und wurde
+                    unter anderem für roten Wandverputz oder auch für rote Verfugung
+                    genutzt. Auch in der Schriftkultur spielte er eine Rolle: Inschriften
+                    wurden mit Rötel rot hervorgehoben, um sie besser sichtbar zu machen
+                    oder ihre Bedeutung zu unterstreichen. Das Rötelvorkommen in Tholey
+                    dürfte daher zur wirtschaftlichen Entwicklung des Vicus beigetragen
+                    haben, da durch Gewinnung, Verarbeitung und Handel ein wichtiger
+                    Wirtschaftszweig entstanden ist.
                 </div>
             </div>
         </main>
 
-        <div class="quiz-feedback">Bitte tippen Sie im Quiz jeweils die richtige Antwort an.</div>
-
         <div class="nav-row">
-            <button class="cta" onclick="startQuiz()">Quiz starten</button>
+            <button class="cta" onclick="showScreen('screen-herstellung')">Weiter: Herstellung</button>
         </div>
     </section>
 
-    <!-- ==================== 5 | QUIZ ==================== -->
+    <!-- ==================== 4 | HERSTELLUNG ==================== -->
+    <section class="screen" id="screen-herstellung">
+        <header>
+            <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
+            <h2 class="screen-title">Herstellung des R&ouml;telstifts</h2>
+        </header>
+
+        <main>
+            <div class="image-row two">
+                <div class="img-frame">
+                    <img src="assets/wirtschaft/herstellung_roetel.png" alt="Herstellung des Rötels">
+                    <div class="img-caption">Herstellung des Rötels</div>
+                </div>
+                <div class="img-frame">
+                    <img src="assets/wirtschaft/stift.png" alt="Rötelstift">
+                    <div class="img-caption">Rötelstift</div>
+                </div>
+            </div>
+        </main>
+
+        <div class="nav-row">
+            <button class="cta" onclick="showScreen('screen-nutzung')">Weiter: Nutzung</button>
+        </div>
+    </section>
+
+    <!-- ==================== 5 | NUTZUNG ==================== -->
+    <section class="screen" id="screen-nutzung">
+        <header>
+            <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
+            <h2 class="screen-title">Nutzung des R&ouml;tels</h2>
+        </header>
+
+        <main>
+            <div class="image-row">
+                <div class="img-frame">
+                    <img src="assets/wirtschaft/Wandverputz.png" alt="Roter Wandverputz">
+                    <div class="img-caption">Roter Wandverputz</div>
+                </div>
+                <div class="img-frame">
+                    <img src="assets/wirtschaft/Grab.png" alt="Grabmal">
+                    <div class="img-caption">Grabmal</div>
+                </div>
+                <div class="img-frame">
+                    <img src="assets/wirtschaft/rubricatio.png" alt="Rubricatio: mit Rötel hervorgehobene Inschrift">
+                    <div class="img-caption">Rubricatio: mit Rötel hervorgehobene Inschrift</div>
+                </div>
+            </div>
+        </main>
+
+        <div class="nav-row">
+            <button class="cta" onclick="startQuiz()">Weiter zum Quiz</button>
+        </div>
+    </section>
+
+    <!-- ==================== 6 | QUIZ ==================== -->
     <section class="screen" id="screen-quiz">
         <header>
             <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
-            <div class="eyebrow">Wirtschaft &middot; Solidus</div>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
             <h2 class="screen-title">Quiz</h2>
         </header>
 
@@ -836,45 +697,22 @@
         </div>
     </section>
 
-    <!-- ==================== 6 | VIDEO ==================== -->
-    <section class="screen" id="screen-video">
+    <!-- ==================== 7 | ABSCHLUSS ==================== -->
+    <section class="screen" id="screen-ende">
         <header>
-            <button class="home-btn" onclick="showScreen('screen-start')">&#8962; Start</button>
-            <div class="eyebrow">Wirtschaft &middot; Solidus</div>
-            <h2 class="screen-title">Die Münzprägung</h2>
+            <div class="eyebrow">Wirtschaft &middot; R&ouml;tel</div>
         </header>
 
         <main>
-            <div class="video-frame">
-                <!-- Videopfad wie auf dem HCMP: liegt dort in html_content/videos/ -->
-                <video id="stationVideo"
-                       src="videos/muenzpraegung.mp4"
-                       playsinline
-                       preload="auto"></video>
-
-                <div class="overlay" id="muteOverlay">
-                    <div class="pill">Bildschirm ber&uuml;hren, um den Ton einzuschalten</div>
-                </div>
-
-                <div class="endcard" id="endCard">
-                    <div class="end-title">Ende</div>
-                    <div class="end-hint">
-                        Tippen Sie auf den Bildschirm, um das Video erneut zu starten,
-                        oder legen Sie das Objekt erneut auf die Medienstation.
-                    </div>
-                </div>
+            <div class="end-title">Vielen Dank!</div>
+            <div class="end-hint">
+                Legen Sie das Objekt erneut auf die Medienstation, oder tippen Sie
+                auf den Bildschirm, um von vorn zu beginnen.
             </div>
         </main>
-
-        <div class="video-credit">
-            <p>Mit freundlicher Genehmigung des Numismatischen Verbundes in Baden-Württemberg</p>
-            <img src="assets/wirtschaft/qrcode.png" alt="QR-Code zum Numismatischen Verbund Baden-Württemberg">
-        </div>
     </section>
 
-    <!-- Three.js – lokale Kopien wie im Repo (html_content/js) für den Offline-Betrieb.
-         Solange die Datei noch nicht im Repo liegt (js-Ordner fehlt), zeigt der
-         Viewer automatisch den Fallback an. -->
+    <!-- Three.js – lokale Kopien aus dem Repo (html_content/js) für den Offline-Betrieb. -->
     <script src="js/three.min.js"></script>
     <script src="js/GLTFLoader.js"></script>
     <script src="js/DRACOLoader.js"></script>
@@ -891,45 +729,28 @@
 
             // 3D-Viewer/Canvas an die nun sichtbare Bildschirmgroesse anpassen
             window.dispatchEvent(new Event('resize'));
-
-            var video = document.getElementById('stationVideo');
-            if (id === 'screen-video') {
-                startPlayback();
-            } else if (!video.paused) {
-                video.pause();
-                video.currentTime = 0;
-            }
         }
 
         /* ==================== Quiz ==================== */
         var quizData = [
             {
-                q: 'Für wie viele Solidi bekam man einen Löwen?',
-                answers: ['20 Solidi', '100 Solidi', '150 Solidi'],
-                correct: 2
-            },
-            {
-                q: 'Wie viel Kilogramm Salz bekam man für einen Solidus?',
-                answers: ['50 kg', '125 kg', '175 kg'],
-                correct: 2
-            },
-            {
-                q: 'Wie viele Solidi kostete ein Rennpferd?',
-                answers: ['50 Solidi', '100 Solidi', '200 Solidi'],
-                correct: 1
-            },
-            {
-                q: 'Was bekam man für einen Solidus?',
-                answers: [
-                    '5 Monate Latein-/Griechisch-Unterricht bei einem Lehrer',
-                    '1000 kg Weihrauch',
-                    'Einen Streitwagen'
-                ],
+                q: 'Gibt es ein natürliches Rötelvorkommen in Theley?',
+                answers: ['Ja', 'Nein'],
                 correct: 0
             },
             {
-                q: 'Wie hoch waren die Anwaltskosten für eine Klage?',
-                answers: ['1 Solidus', '10 Solidi', '50 Solidi'],
+                q: 'Wie heißt es, wenn man eingemeißelte Buchstaben mit Rötel farblich hervorhob?',
+                answers: ['Akzentuieren', 'Rubricatio', 'Highlight'],
+                correct: 1
+            },
+            {
+                q: 'Wo wurde Rötel noch genutzt?',
+                answers: ['Beim Bad', 'Beim Kochen', 'Als Kosmetik'],
+                correct: 2
+            },
+            {
+                q: 'Worauf wurde mit Rötel auch geschrieben/gezeichnet?',
+                answers: ['Holz', 'Tiere', 'Stoff'],
                 correct: 0
             }
         ];
@@ -1011,68 +832,23 @@
             document.getElementById('quizFeedback').textContent = '';
 
             var nextBtn = document.getElementById('quizNextBtn');
-            nextBtn.textContent = 'Weiter zum Video';
+            nextBtn.textContent = 'Zum Abschluss';
             nextBtn.classList.remove('hidden');
             nextBtn.onclick = function () {
                 nextBtn.onclick = nextQuestion;   // fuer Neustart zuruecksetzen
                 nextBtn.textContent = 'Weiter';
-                showScreen('screen-video');
+                showScreen('screen-ende');
             };
         }
 
-        /* ==================== Video (wie hundekopf_video.html) ==================== */
-        var video = document.getElementById('stationVideo');
-        var muteOverlay = document.getElementById('muteOverlay');
-        var endCard = document.getElementById('endCard');
-
-        // Autoplay-Strategie:
-        // 1. Versuch: mit Ton starten (funktioniert, wenn Chromium mit
-        //    --autoplay-policy=no-user-gesture-required laeuft).
-        // 2. Fallback: stumm starten und Hinweis einblenden.
-        async function startPlayback() {
-            endCard.classList.remove('visible');
-            video.currentTime = 0;
-            try {
-                await video.play();
-            } catch (err) {
-                video.muted = true;
-                try {
-                    await video.play();
-                    muteOverlay.classList.add('visible');
-                } catch (err2) {
-                    endCard.classList.add('visible');
-                }
-            }
-        }
-
-        function onUserGesture(e) {
-            // Nur auf der Videoseite reagieren
-            if (!document.getElementById('screen-video').classList.contains('active')) {
+        /* ==================== Abschluss: Tippen startet von vorn ==================== */
+        document.addEventListener('pointerdown', function (e) {
+            if (!document.getElementById('screen-ende').classList.contains('active')) {
                 return;
             }
-            // Taps auf Buttons nicht abfangen
             if (e.target.closest('button')) { return; }
-
-            if (endCard.classList.contains('visible')) {
-                endCard.classList.remove('visible');
-                video.currentTime = 0;
-                video.play().catch(function () {});
-                return;
-            }
-            if (video.muted) {
-                video.muted = false;
-                muteOverlay.classList.remove('visible');
-                if (video.paused) {
-                    video.play().catch(function () {});
-                }
-            }
-        }
-
-        video.addEventListener('ended', function () {
-            endCard.classList.add('visible');
+            showScreen('screen-start');
         });
-
-        document.addEventListener('pointerdown', onUserGesture);
 
         /* ==================== 3D-Viewer (Three.js, wie kosmetik_nadel.html) ==================== */
         (function () {
@@ -1107,7 +883,7 @@
                 if (THREE.ACESFilmicToneMapping) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15; }
                 canvasWrap.appendChild(renderer.domElement);
 
-                // Helles Umgebungslicht, damit das Gold der Muenze glaenzt
+                // Helles Umgebungslicht fuer plastische Materialwirkung
                 try {
                     var pmrem = new THREE.PMREMGenerator(renderer);
                     var envScene = new THREE.Scene();
@@ -1174,9 +950,9 @@
                     // Kamera automatisch auf das Objekt einrahmen
                     var radius = 0.5 * Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) || 1;
                     var vfov = camera.fov * Math.PI / 180;
-                    // 0.78 statt 1.25: deutlich naeher an der Muenze. Der Wert ist
-                    // auf das flache Objekt abgestimmt; bei sperrigeren Modellen erhoehen.
-                    startDist = (radius / Math.sin(vfov / 2)) * 0.78;
+                    // 0.9: naeher heran, aber mit Reserve fuer das laengliche Objekt -
+                    // je nach Ausrichtung des Scans ggf. anpassen (Muenze nutzt 0.78).
+                    startDist = (radius / Math.sin(vfov / 2)) * 0.9;
                     camera.position.set(0, 0, startDist);
                     camera.near = startDist / 100;
                     camera.far = startDist * 100;

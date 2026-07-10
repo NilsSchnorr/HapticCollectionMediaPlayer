@@ -227,8 +227,10 @@
         /* ---------- 3D-Viewer (Three.js, Stil wie kosmetik_nadel.html) ---------- */
         .model3d-stage {
             position: relative;
-            height: clamp(220px, 46vh, 500px);
-            aspect-ratio: 4 / 3;
+            /* Grosse Buehne: Hoehe durch Bildschirm begrenzt (64vh), Breite
+               durch 55vw (ergibt bei 16/10 max. 88vw Breite) */
+            height: min(64vh, 55vw);
+            aspect-ratio: 16 / 10;
             max-width: 100%;
             overflow: hidden;
             border: 3px solid var(--deepred);
@@ -313,6 +315,15 @@
             cursor: pointer;
         }
         .model3d-controls button:active { background-color: var(--deepred); }
+
+        /* Hinweis, Buttons und Datierung in einer Zeile unter der Buehne */
+        .model-info-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5vw;
+        }
 
         .hint-pill {
             background-color: rgba(164, 44, 26, 0.18);
@@ -655,12 +666,14 @@
                     <div class="model3d-spinner" role="status"><span class="dot"></span><span>3D-Modell wird geladen &hellip;</span></div>
                     <div class="model3d-note">Vorschau &ndash; auf der Station im Museum dreht sich hier das interaktive 3D-Modell.</div>
                 </div>
-                <div class="hint-pill">dreh- und bewegbar</div>
-                <div class="model3d-controls">
-                    <button type="button" data-action="toggle-rotate" aria-pressed="true">Drehung pausieren</button>
-                    <button type="button" data-action="reset">Ansicht zur&uuml;cksetzen</button>
+                <div class="model-info-row">
+                    <div class="hint-pill">dreh- und bewegbar</div>
+                    <div class="model3d-controls">
+                        <button type="button" data-action="toggle-rotate" aria-pressed="true">Drehung pausieren</button>
+                        <button type="button" data-action="reset">Ansicht zur&uuml;cksetzen</button>
+                    </div>
+                    <div class="dating">Datierung: 388&ndash;392 n.&thinsp;Chr.</div>
                 </div>
-                <div class="dating">Datierung: 388&ndash;392 n.&thinsp;Chr.</div>
             </div>
         </main>
 
@@ -1079,7 +1092,7 @@
                 var renderer;
                 try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
                 catch (e) { showFallback(stage); return; }
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setPixelRatio(1);   // Full-HD-Kiosk: nativ rendern, schont die Pi-GPU
                 renderer.setSize(width, height);
                 renderer.setClearColor(0x000000, 0);
                 if ('outputEncoding' in renderer && THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
@@ -1132,7 +1145,7 @@
                             var mats = Array.isArray(o.material) ? o.material : [o.material];
                             mats.forEach(function (m) {
                                 m.side = THREE.DoubleSide;
-                                if (m.map && maxAniso) m.map.anisotropy = maxAniso;
+                                if (m.map && maxAniso) m.map.anisotropy = Math.min(4, maxAniso);   // 4 reicht, schont die Pi-GPU
                             });
                         }
                     });
@@ -1153,7 +1166,9 @@
                     // Kamera automatisch auf das Objekt einrahmen
                     var radius = 0.5 * Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) || 1;
                     var vfov = camera.fov * Math.PI / 180;
-                    startDist = (radius / Math.sin(vfov / 2)) * 1.25;
+                    // 0.78 statt 1.25: deutlich naeher an der Muenze. Der Wert ist
+                    // auf das flache Objekt abgestimmt; bei sperrigeren Modellen erhoehen.
+                    startDist = (radius / Math.sin(vfov / 2)) * 0.78;
                     camera.position.set(0, 0, startDist);
                     camera.near = startDist / 100;
                     camera.far = startDist * 100;
@@ -1179,9 +1194,13 @@
                 }
                 window.addEventListener('resize', resize);
 
+                var screenObjekt = document.getElementById('screen-objekt');
                 (function animate() {
                     requestAnimationFrame(animate);
-                    var dt = clock.getDelta();
+                    var dt = clock.getDelta();   // immer abrufen, sonst Rotationssprung beim Fortsetzen
+                    // Nur rendern, wenn die Objektseite tatsaechlich sichtbar ist -
+                    // entlastet GPU/CPU auf allen anderen Screens erheblich.
+                    if (document.hidden || !screenObjekt.classList.contains('active')) return;
                     if (rotator && autoRotate && !userInteracting) rotator.rotation.y += RAD_PER_SEC * dt;
                     controls.update();
                     renderer.render(scene, camera);

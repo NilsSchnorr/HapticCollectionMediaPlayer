@@ -121,16 +121,9 @@ body {
   font-size: clamp(1.15rem, 2vw, 1.45rem);
   color: var(--olive-dark);
 }
-.intro {
-  margin: 0 0 14px;
-  padding: 24px 28px;
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--olive);
-  border-radius: 10px;
-  background: rgba(163, 177, 138, 0.16);
-}
+/* Einleitung fließt als normaler Text (kein abgesetzter Kasten) */
+.intro { margin: 0; }
 .intro .lead { margin: 0 0 12px; }
-.intro p:last-child { margin-bottom: 0; }
 .screen-body h2 {
   margin: 0 0 14px;
   color: var(--olive-dark);
@@ -334,6 +327,20 @@ a { color: var(--bronze); font-weight: 700; }
   font-size: 1.02rem;
 }
 
+/* Schmale Logo-Leiste (auf jedem Screen) */
+.logo-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.2rem, 3vw, 2.6rem);
+  padding: 10px 16px;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+.logo-strip img { height: 34px; width: auto; display: block; }
+.logo-strip img.novus { height: 42px; }
+
 /* Quiz */
 .quiz {
   font-family: Arial, sans-serif;
@@ -414,17 +421,6 @@ a { color: var(--bronze); font-weight: 700; }
   max-width: 1100px;
   margin: 0 auto;
 }
-.site-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  padding-top: 26px;
-  border-top: 2px solid rgba(96, 108, 56, 0.22);
-}
-.site-footer img { height: 44px; width: auto; display: block; }
-.site-footer img.novus { height: 56px; }
 
 @media (max-width: 900px) {
   .object3d { grid-template-columns: 1fr; }
@@ -461,6 +457,12 @@ a { color: var(--bronze); font-weight: 700; }
 
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-objekt')">Weiter: Zum Objekt</button>
+    </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
     </div>
   </article>
 </section>
@@ -514,6 +516,12 @@ a { color: var(--bronze); font-weight: 700; }
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-duefte')">Weiter: Düfte und Parfüm</button>
     </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
+    </div>
   </article>
 </section>
 
@@ -539,6 +547,12 @@ a { color: var(--bronze); font-weight: 700; }
 
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-luxus')">Weiter: Luxus für alle?</button>
+    </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
     </div>
   </article>
 </section>
@@ -571,6 +585,12 @@ a { color: var(--bronze); font-weight: 700; }
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-wasser')">Weiter: Sauberes Wasser</button>
     </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
+    </div>
   </article>
 </section>
 
@@ -602,6 +622,12 @@ a { color: var(--bronze); font-weight: 700; }
 
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-quiz')">Weiter: Zum Quiz</button>
+    </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
     </div>
   </article>
 </section>
@@ -695,6 +721,12 @@ a { color: var(--bronze); font-weight: 700; }
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-abschluss')">Weiter: Abschluss</button>
     </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
+    </div>
   </article>
 </section>
 
@@ -713,17 +745,17 @@ a { color: var(--bronze); font-weight: 700; }
     <div class="screen-body">
       <div class="abschluss-inner">
         <p class="closing">Salbgefäß und Haarnadel zeigen, dass die Bewohnerinnen und Bewohner des Vicus Wareswald an den Lebensgewohnheiten des Römischen Reiches teilhatten. Körperpflege, Düfte und Badekultur waren nicht nur in den großen Städten verbreitet, sondern gehörten auch in einer kleineren Siedlung wie dem Wareswald zum Alltag.</p>
-
-        <footer class="site-footer">
-          <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
-          <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
-          <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
-        </footer>
       </div>
     </div>
 
     <div class="navrow">
       <button class="button" type="button" onclick="showScreen('screen-start')">Zurück zum Start</button>
+    </div>
+
+    <div class="logo-strip">
+      <img class="novus" src="images/logos_vicus_wareswald/novus.png" alt="Novus Stiftung">
+      <img class="theu" src="images/logos_vicus_wareswald/theulegium.png" alt="Museum Theulegium">
+      <img class="uni" src="images/logos_vicus_wareswald/uni_saarland.png" alt="Universität des Saarlandes">
     </div>
   </article>
 </section>

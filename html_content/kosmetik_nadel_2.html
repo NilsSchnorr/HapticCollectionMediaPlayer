@@ -17,7 +17,7 @@
   --line: rgba(40, 54, 24, 0.16);
 }
 * { box-sizing: border-box; }
-html { font-size: 24px; }
+html { font-size: 20px; }
 html, body { height: 100%; overflow: hidden; }
 body {
   margin: 0;
@@ -1298,7 +1298,7 @@ document.querySelectorAll(".empress-card").forEach(function (button) {
    daher über Klassen statt über IDs angesprochen. */
 (function () {
   var root = document.documentElement;
-  var step = 1, min = 20, max = 34;
+  var step = 1, min = 16, max = 28;
   function current() { return parseFloat(window.getComputedStyle(root).fontSize); }
   document.querySelectorAll(".font-up").forEach(function (btn) {
     btn.addEventListener("click", function () {

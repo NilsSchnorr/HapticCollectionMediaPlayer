@@ -17,7 +17,7 @@
   --line: rgba(40, 54, 24, 0.16);
 }
 * { box-sizing: border-box; }
-html { font-size: 24px; }
+html { font-size: 20px; }
 body {
   margin: 0;
   min-height: 100vh;
@@ -83,7 +83,7 @@ main {
 .hero h1 {
   max-width: 1150px;
   margin: 0;
-  font-size: clamp(2.2rem, 4.85vw, 4.8rem);
+  font-size: clamp(2.2rem, 4.2vw, 4.8rem);
   font-weight: 700;
   line-height: 1.08;
   text-wrap: balance;
@@ -754,7 +754,7 @@ document.querySelectorAll(".quiz-card").forEach(function (card) {
 /* ---------- Schriftgröße (Barrierefreiheit) ---------- */
 (function () {
   var root = document.documentElement;
-  var step = 1, min = 20, max = 34;
+  var step = 1, min = 16, max = 28;
   function current() { return parseFloat(window.getComputedStyle(root).fontSize); }
   document.getElementById("font-up").addEventListener("click", function () {
     var s = Math.min(current() + step, max); root.style.fontSize = s + "px";
